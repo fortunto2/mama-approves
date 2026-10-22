@@ -56,7 +56,7 @@
 <body>
   <div class="hero" id="hero">🍲</div>
   <h1 id="title">Mom Approves?</h1>
-  <p class="sub" id="subtitle">Point at food. One call to Jev, nine typed questions, mom's rules as weights. No LLM.</p>
+  <p class="sub" id="subtitle">Point at food. Mom decides in one second.</p>
   <div class="tabs">
     <button class="on" onclick="tab('mom')">🍲 Mom</button>
     <button onclick="tab('bro')">😎 Bro</button>
@@ -89,17 +89,13 @@
 
   <section class="help">
     <h2>⚙️ How it works</h2>
-    <ol>
-      <li>Your photo goes to <b>Jev</b>, TypeSafe AI's decision model, as the <i>state</i>. One request.</li>
-      <li>Typed questions ride along: home-made? vegetables? warm meal? junk? portion? expired? allergen? food at all? (Bro asks: same vibe? both smiling? style match? red flags?)</li>
-      <li>Jev answers each with a <b>calibrated probability</b> in one parallel pass. No text generated, nothing to parse, nothing to hallucinate.</li>
-      <li>The rules are <b>weights in code</b>. Change a number, not a prompt.</li>
-      <li>Low confidence, empty plate or no person → <b>Show me closer</b> instead of a guess.</li>
-    </ol>
-    <p>0.3–1.5 s per verdict. No LLM anywhere in the loop. <a href="/docs" style="color:var(--accent)">API docs</a>: <code>POST /decide</code> (photo), <code>POST /bro</code> (me, them), <code>GET /recent</code>.</p>
+    <p><b>One call to Jev</b> (TypeSafe AI decision model) with the photo and a handful of typed questions.<br>
+    <b>Calibrated probabilities</b> back in ~1 s, no text, no LLM.<br>
+    <b>Mom's rules are weights in code.</b> Low confidence → “show me closer”, not a guess.</p>
+    <p><a href="/docs" style="color:var(--accent)">API</a>: <code>POST /decide</code> · <code>POST /bro</code> · <code>GET /recent</code></p>
     <div class="share">
       <img src="/qr.png" alt="QR" width="132" height="132">
-      <div><b>Try it on your phone</b><br>scan or open<br><code>{{LAN_URL}}</code></div>
+      <div><b>Try it on your phone</b><br><code>{{LAN_URL}}</code></div>
     </div>
   </section>
   <footer>Built in 50 minutes · OC AI Builders Lightning Hackathon, Irvine, Oct 21 2026 · Jev by TypeSafe AI</footer>
@@ -111,7 +107,7 @@ let mode="mom", files={};
 function tab(m){ mode=m; document.querySelectorAll(".tabs button").forEach((b,i)=>b.classList.toggle("on",["mom","bro"][i]===m));
   document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("on",p.id==="pane-"+m));
   title.textContent = m==="mom" ? "Mom Approves?" : "Bro Approves?"; hero.textContent = m==="mom" ? "🍲" : "😎";
-  subtitle.textContent = m==="mom" ? "Point at food. One call to Jev, nine typed questions, mom's rules as weights. No LLM." : "Your selfie + their photo. Bro checks the vibe. Calibrated, brutally honest.";
+  subtitle.textContent = m==="mom" ? "Point at food. Mom decides in one second." : "Your selfie + their photo. Bro checks the vibe.";
   card.classList.remove("show"); }
 function pick(input,who){ const f=input.files[0]; if(!f) return; files[who]=f; document.getElementById("t-"+who).src=URL.createObjectURL(f); broGo.disabled=!(files.me&&files.them); }
 function show(j, imgs){
