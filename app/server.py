@@ -9,7 +9,11 @@ import tempfile
 from pathlib import Path
 
 from fastapi import FastAPI, File, UploadFile
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, Response
+import io
+import socket
+
+import qrcode
 from typesafe_sdk import TypeSafeClient
 
 from app.decide import decide
@@ -31,18 +35,27 @@ async def decide_photo(photo: UploadFile = File(...)):
     return JSONResponse({**v.__dict__, "mom": v.mom_says()})
 
 
+def lan_url() -> str:
+    """Address other phones on this Wi-Fi can reach: the Mac's LAN IP, not 127.0.0.1."""
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.connect(("8.8.8.8", 80))
+        ip = sock.getsockname()[0]
+        sock.close()
+    except OSError:
+        ip = "127.0.0.1"
+    return f"http://{ip}:8787/"
+
+
+@app.get("/qr.png")
+async def qr_png():
+    img = qrcode.make(lan_url(), box_size=8, border=2)
+    buf = io.BytesIO()
+    img.save(buf, "PNG")
+    return Response(buf.getvalue(), media_type="image/png")
+
+
 @app.get("/", response_class=HTMLResponse)
 async def index():
-    return """<!doctype html><meta name=viewport content="width=device-width">
-<title>Mama Approves</title>
-<body style="font:20px system-ui;max-width:28em;margin:2em auto;text-align:center">
-<h1>Мама одобрит?</h1>
-<form method=post action=/decide enctype=multipart/form-data id=f>
-<input type=file name=photo accept="image/*" capture=environment onchange="go()" style="font-size:1.2em">
-</form><pre id=o style="text-align:left;white-space:pre-wrap"></pre>
-<script>
-async function go(){const fd=new FormData(f);o.textContent='…';
-const r=await fetch('/decide',{method:'POST',body:fd});const j=await r.json();
-const m={APPROVE:'✅',NOPE:'❌',REVIEW:'🤔'}[j.decision];
-o.textContent=`${m} ${j.decision}  mom=${j.approve}  conf=${j.confidence}  ${j.ms} ms\n«${j.mom}»\n\n`+JSON.stringify(j.answers,null,1)}
-</script></body>"""
+    html = (Path(__file__).parent / "index.html").read_text()
+    return html.replace("{{LAN_URL}}", lan_url())

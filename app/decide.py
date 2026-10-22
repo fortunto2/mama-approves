@@ -81,21 +81,21 @@ class Verdict:
     def mom_says(self) -> str:
         a = self.answers
         if self.decision == "REVIEW":
-            return "Покажи поближе, не вижу что это."
+            return "Show me closer, I can't see what that is."
         if self.decision == "APPROVE":
-            return "Молодец. Но добавки возьми." if a["portion"] <= 1 else "Молодец, ешь."
+            return "Good. Now have seconds, you're too skinny." if a["portion"] <= 1 else "Good. Eat, eat."
         lines = []
         if a["junk"] > 0.5:
-            lines.append("Это не еда, это химия.")
+            lines.append("That's not food, that's chemicals.")
         if a["vegetables"] < 0.4:
-            lines.append("Где овощи?")
+            lines.append("Where are the vegetables?")
         if a["warm_meal"] < 0.4 and a["junk"] <= 0.5:
-            lines.append("Горячего поешь.")
+            lines.append("Have something warm.")
         if a["home_made"] < 0.4:
-            lines.append("Дома бы приготовил.")
+            lines.append("You could have cooked at home.")
         if self.expired > 0.5:
-            lines.append("Это уже просрочено, выбрось.")
-        return " ".join(lines) or "Ну такое."
+            lines.append("That's expired. Throw it out.")
+        return " ".join(lines) or "Hmm. I've seen better."
 
 
 def shrink(photo: Path, max_side: int = MAX_SIDE) -> bytes:

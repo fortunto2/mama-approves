@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mom Approves?</title>
+<style>
+  :root { --bg:#0f0f12; --card:#1a1a20; --fg:#f4f4f5; --muted:#9a9aa3; --ok:#34d399; --no:#f87171; --hm:#fbbf24; --accent:#a78bfa; }
+  * { box-sizing:border-box }
+  body { margin:0; background:var(--bg); color:var(--fg); font:17px/1.4 -apple-system, system-ui, sans-serif; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:24px 16px 48px }
+  h1 { font-size:34px; margin:16px 0 4px; letter-spacing:-.02em }
+  .sub { color:var(--muted); margin:0 0 28px; text-align:center }
+  .btn { display:inline-flex; align-items:center; gap:10px; background:var(--accent); color:#111; font-weight:700; font-size:19px; padding:16px 28px; border-radius:16px; cursor:pointer; border:0 }
+  .btn input { display:none }
+  .card { width:100%; max-width:480px; background:var(--card); border-radius:20px; padding:22px; margin-top:24px; display:none }
+  .card.show { display:block }
+  .verdict { font-size:56px; font-weight:800; letter-spacing:-.03em; line-height:1; display:flex; align-items:center; gap:14px }
+  .verdict.APPROVE { color:var(--ok) } .verdict.NOPE { color:var(--no) } .verdict.REVIEW { color:var(--hm) }
+  .mom { font-size:22px; margin:16px 0 6px; font-style:italic }
+  .meta { color:var(--muted); font-size:14px; margin-bottom:18px }
+  .bar { height:10px; background:#2a2a33; border-radius:6px; overflow:hidden; margin:6px 0 18px }
+  .bar i { display:block; height:100%; background:linear-gradient(90deg,var(--no),var(--hm),var(--ok)); width:0; transition:width .6s }
+  .chips { display:flex; flex-wrap:wrap; gap:8px }
+  .chip { background:#26262e; border-radius:999px; padding:6px 12px; font-size:14px; color:var(--muted) }
+  .chip b { color:var(--fg); font-weight:600 }
+  img.preview { width:100%; max-height:260px; object-fit:cover; border-radius:14px; margin-bottom:16px }
+  .spin { color:var(--muted); margin-top:20px }
+  .help { width:100%; max-width:480px; margin-top:36px; color:var(--muted); font-size:15px }
+  .help h2 { color:var(--fg); font-size:20px; margin:0 0 10px }
+  .help ol { padding-left:20px; margin:0 0 10px } .help li { margin:6px 0 } .help b { color:var(--fg) }
+  .share { display:flex; align-items:center; gap:16px; background:var(--card); border-radius:16px; padding:14px; margin-top:14px; color:var(--fg) }
+  .share img { border-radius:10px; background:#fff; padding:4px } .share code { color:var(--accent); font-size:13px }
+  footer { margin-top:auto; padding-top:28px; color:var(--muted); font-size:13px; text-align:center }
+</style>
+<body>
+  <h1>Mom Approves?</h1>
+  <p class="sub">Point at food. One call to Jev, nine typed questions, mom's rules as weights. No LLM.</p>
+  <label class="btn">📷 Take a photo<input type="file" accept="image/*" capture="environment" onchange="judge(this)"></label>
+  <div class="spin" id="spin" hidden>Asking mom…</div>
+  <div class="card" id="card">
+    <img class="preview" id="preview" alt="">
+    <div class="verdict" id="verdict"></div>
+    <div class="mom" id="mom"></div>
+    <div class="meta" id="meta"></div>
+    <div>Mom score</div>
+    <div class="bar"><i id="bar"></i></div>
+    <div class="chips" id="chips"></div>
+  </div>
+  <section class="help">
+    <h2>How it works</h2>
+    <ol>
+      <li>Your photo goes to <b>Jev</b>, TypeSafe AI's decision model, as the <i>state</i>. One request.</li>
+      <li>Nine typed questions ride along: home-made? vegetables? warm meal? junk? portion? expired? allergen? category? food at all?</li>
+      <li>Jev answers each with a <b>calibrated probability</b> in one parallel pass. It never generates text, so there is nothing to parse and nothing to hallucinate.</li>
+      <li>Mom's rules are <b>weights in code</b> (home-made 0.25, vegetables 0.25, no junk 0.20, warm 0.15, portion 0.15). Change a number, not a prompt.</li>
+      <li>Confidence below 0.6, or no food in frame → <b>Show me closer</b> instead of a guess. Expired &gt; 0.5 caps the score at 0.1.</li>
+    </ol>
+    <p>Latency 0.3–1.5 s on a 768 px photo, all nine answers in one call. No LLM anywhere in the loop.</p>
+    <div class="share">
+      <img src="/qr.png" alt="QR to this page" width="132" height="132">
+      <div><b>Try it on your phone</b><br>same Wi-Fi, scan or open<br><code>{{LAN_URL}}</code></div>
+    </div>
+  </section>
+  <footer>Built in 50 minutes · OC AI Builders Lightning Hackathon, Irvine, Oct 21 2026 · Jev by TypeSafe AI</footer>
+<script>
+const ICON = {APPROVE:"✅", NOPE:"❌", REVIEW:"🤔"};
+const LABEL = {APPROVE:"Approved", NOPE:"Nope", REVIEW:"Show me closer"};
+async function judge(input){
+  const file = input.files[0]; if(!file) return;
+  preview.src = URL.createObjectURL(file);
+  card.classList.remove("show"); spin.hidden = false;
+  const fd = new FormData(); fd.append("photo", file);
+  try {
+    const r = await fetch("/decide", {method:"POST", body:fd});
+    const j = await r.json();
+    verdict.className = "verdict " + j.decision;
+    verdict.textContent = `${ICON[j.decision]} ${LABEL[j.decision]}`;
+    mom.textContent = `“${j.mom}”`;
+    meta.textContent = `${j.category} · allergen: ${j.allergen} · confidence ${j.confidence} · ${j.ms} ms`;
+    bar.style.width = Math.round(j.approve*100) + "%";
+    const keys = ["home_made","vegetables","warm_meal","junk","expired","portion"];
+    chips.innerHTML = keys.map(k => `<span class="chip">${k.replace("_"," ")} <b>${j.answers[k]}</b></span>`).join("");
+    card.classList.add("show");
+  } catch(e){ mom.textContent = "Server not reachable: " + e; card.classList.add("show"); }
+  finally { spin.hidden = true; input.value = ""; }
+}
+</script>
+</body>
+</html>
