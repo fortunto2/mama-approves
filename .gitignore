@@ -5,3 +5,4 @@ __pycache__/
 samples/
 *.local.md
 .DS_Store
+data/
