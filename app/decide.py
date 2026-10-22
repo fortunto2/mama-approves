@@ -34,7 +34,8 @@ RULES = {
 }
 
 QUESTIONS = {
-    "food_present": Noul(instructions="Is there food or a food product visible in `photo`?"),
+    "food_present": Noul(instructions="Is there actual food or a food product visible in `photo`? An empty plate, table or room counts as no."),
+    "empty_plate": Noul(instructions="Is the plate, bowl or container in `photo` empty or nearly empty?"),
     "home_made": Noul(instructions="Does the food in `photo` look home-cooked rather than packaged, fast food or takeout?"),
     "vegetables": Noul(instructions="Are there visible vegetables, greens or fruit in `photo`?"),
     "warm_meal": Noul(instructions="Is the food in `photo` a warm cooked meal (soup, stew, grains, meat with sides) rather than a snack?"),
@@ -131,6 +132,7 @@ def decide(photo: Path, client: TypeSafeClient | None = None) -> Verdict:
         "junk": n["junk"].noul,
         "portion": s["portion"].score,
         "expired": n["expired"].noul,
+        "empty_plate": n["empty_plate"].noul,
     }
     a["no_junk"] = 1 - a["junk"]
     a["portion_ok"] = 1.0 if 2 <= a["portion"] <= 3 else 0.5 if a["portion"] in (1, 4) else 0.0
@@ -138,7 +140,7 @@ def decide(photo: Path, client: TypeSafeClient | None = None) -> Verdict:
     if a["expired"] > 0.5:
         approve = min(approve, 0.1)
     conf = c["category"].confidence
-    if a["food_present"] < 0.5 or conf < GATE:
+    if a["food_present"] < 0.7 or a["empty_plate"] > 0.6 or conf < GATE:
         decision = "REVIEW"
     else:
         decision = "APPROVE" if approve >= 0.6 else "NOPE"

@@ -16,6 +16,7 @@ import qrcode
 from typesafe_sdk import TypeSafeClient
 
 from app.decide import decide
+from app.modes import RECENT, bro, remember, wife
 
 app = FastAPI(title="Mama Approves")
 _client = TypeSafeClient()
@@ -29,9 +30,45 @@ async def decide_photo(photo: UploadFile = File(...)):
         path = Path(f.name)
     try:
         v = decide(path, _client)
+        out = {**v.__dict__, "mom": v.mom_says()}
+        remember("mom", path, out)
     finally:
         path.unlink(missing_ok=True)
-    return JSONResponse({**v.__dict__, "mom": v.mom_says()})
+    return JSONResponse(out)
+
+
+@app.post("/bro")
+async def bro_photo(me: UploadFile = File(...), them: UploadFile = File(...)):
+    paths = []
+    for up in (me, them):
+        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as f:
+            f.write(await up.read())
+            paths.append(Path(f.name))
+    try:
+        out = bro(paths[0], paths[1], _client)
+        remember("bro", paths[1], out, paths[0])
+    finally:
+        for p in paths:
+            p.unlink(missing_ok=True)
+    return JSONResponse(out)
+
+
+@app.post("/wife")
+async def wife_photo(photo: UploadFile = File(...)):
+    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as f:
+        f.write(await photo.read())
+        path = Path(f.name)
+    try:
+        out = wife(path, _client)
+        remember("wife", path, out)
+    finally:
+        path.unlink(missing_ok=True)
+    return JSONResponse(out)
+
+
+@app.get("/recent")
+async def recent():
+    return JSONResponse(list(RECENT))
 
 
 def lan_url() -> str:

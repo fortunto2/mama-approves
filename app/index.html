@@ -6,83 +6,120 @@
 <style>
   :root { --bg:#0f0f12; --card:#1a1a20; --fg:#f4f4f5; --muted:#9a9aa3; --ok:#34d399; --no:#f87171; --hm:#fbbf24; --accent:#a78bfa; }
   * { box-sizing:border-box }
-  body { margin:0; background:var(--bg); color:var(--fg); font:17px/1.4 -apple-system, system-ui, sans-serif; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:24px 16px 48px }
-  h1 { font-size:34px; margin:16px 0 4px; letter-spacing:-.02em }
-  .sub { color:var(--muted); margin:0 0 28px; text-align:center }
-  .btn { display:inline-flex; align-items:center; gap:10px; background:var(--accent); color:#111; font-weight:700; font-size:19px; padding:16px 28px; border-radius:16px; cursor:pointer; border:0 }
-  .btn input { display:none }
-  .card { width:100%; max-width:480px; background:var(--card); border-radius:20px; padding:22px; margin-top:24px; display:none }
+  body { margin:0; background:radial-gradient(1200px 600px at 50% -10%, #2a1f4d 0%, var(--bg) 60%); color:var(--fg); font:17px/1.4 -apple-system, system-ui, sans-serif; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:24px 16px 48px }
+  h1 { font-size:34px; margin:12px 0 4px; letter-spacing:-.02em }
+  .sub { color:var(--muted); margin:0 0 18px; text-align:center }
+  .tabs { display:flex; gap:6px; background:#1a1a20; padding:5px; border-radius:999px; margin-bottom:22px }
+  .tabs button { border:0; background:transparent; color:var(--muted); font-weight:700; font-size:16px; padding:10px 18px; border-radius:999px; cursor:pointer; transition:.2s }
+  .tabs button.on { background:var(--accent); color:#111 }
+  .pane { display:none; flex-direction:column; align-items:center; gap:12px } .pane.on { display:flex }
+  .btn { display:inline-flex; align-items:center; gap:10px; background:var(--accent); color:#111; font-weight:700; font-size:19px; padding:16px 28px; border-radius:16px; cursor:pointer; border:0; transition:transform .15s }
+  .btn:active { transform:scale(.96) } .btn.ghost { background:#26262e; color:var(--fg) } .btn input { display:none }
+  .card { width:100%; max-width:480px; background:var(--card); border-radius:20px; padding:22px; margin-top:12px; display:none; animation:pop .45s cubic-bezier(.2,1.4,.4,1) }
   .card.show { display:block }
-  .verdict { font-size:56px; font-weight:800; letter-spacing:-.03em; line-height:1; display:flex; align-items:center; gap:14px }
-  .verdict.APPROVE { color:var(--ok) } .verdict.NOPE { color:var(--no) } .verdict.REVIEW { color:var(--hm) }
+  @keyframes pop { from { transform:scale(.85) translateY(20px); opacity:0 } to { transform:none; opacity:1 } }
+  @keyframes shake { 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
+  @keyframes bounce { 30%{transform:translateY(-14px) scale(1.08)} 60%{transform:translateY(0)} }
+  .verdict { font-size:54px; font-weight:800; letter-spacing:-.03em; line-height:1; display:flex; align-items:center; gap:14px }
+  .verdict.APPROVE { color:var(--ok); animation:bounce .7s } .verdict.NOPE { color:var(--no); animation:shake .5s } .verdict.REVIEW { color:var(--hm) }
   .mom { font-size:22px; margin:16px 0 6px; font-style:italic }
   .meta { color:var(--muted); font-size:14px; margin-bottom:18px }
   .bar { height:10px; background:#2a2a33; border-radius:6px; overflow:hidden; margin:6px 0 18px }
-  .bar i { display:block; height:100%; background:linear-gradient(90deg,var(--no),var(--hm),var(--ok)); width:0; transition:width .6s }
+  .bar i { display:block; height:100%; background:linear-gradient(90deg,var(--no),var(--hm),var(--ok)); width:0; transition:width .8s cubic-bezier(.2,.9,.3,1.2) }
   .chips { display:flex; flex-wrap:wrap; gap:8px }
-  .chip { background:#26262e; border-radius:999px; padding:6px 12px; font-size:14px; color:var(--muted) }
-  .chip b { color:var(--fg); font-weight:600 }
-  img.preview { width:100%; max-height:260px; object-fit:cover; border-radius:14px; margin-bottom:16px }
-  .spin { color:var(--muted); margin-top:20px }
+  .chip { background:#26262e; border-radius:999px; padding:6px 12px; font-size:14px; color:var(--muted) } .chip b { color:var(--fg); font-weight:600 }
+  .previews { display:flex; gap:10px; margin-bottom:16px } .previews img { flex:1; min-width:0; max-height:220px; object-fit:cover; border-radius:14px }
+  .spin { color:var(--muted); margin-top:8px; animation:blink 1s infinite } @keyframes blink { 50%{opacity:.3} }
+  .thumbs { display:flex; gap:10px } .thumbs img { width:84px; height:84px; object-fit:cover; border-radius:12px; background:#26262e }
+  .gallery { width:100%; max-width:480px; margin-top:36px } .gallery h2 { font-size:20px; margin:0 0 12px }
+  .grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px }
+  .g { position:relative; border-radius:12px; overflow:hidden; aspect-ratio:1; animation:pop .4s } .g img { width:100%; height:100%; object-fit:cover; display:block }
+  .g span { position:absolute; left:0; right:0; bottom:0; padding:3px 6px; font-size:12px; background:rgba(0,0,0,.6); white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
   .help { width:100%; max-width:480px; margin-top:36px; color:var(--muted); font-size:15px }
-  .help h2 { color:var(--fg); font-size:20px; margin:0 0 10px }
-  .help ol { padding-left:20px; margin:0 0 10px } .help li { margin:6px 0 } .help b { color:var(--fg) }
+  .help h2 { color:var(--fg); font-size:20px; margin:0 0 10px } .help ol { padding-left:20px; margin:0 0 10px } .help li { margin:6px 0 } .help b { color:var(--fg) }
   .share { display:flex; align-items:center; gap:16px; background:var(--card); border-radius:16px; padding:14px; margin-top:14px; color:var(--fg) }
-  .share img { border-radius:10px; background:#fff; padding:4px } .share code { color:var(--accent); font-size:13px }
+  .share img { border-radius:10px; background:#fff; padding:4px } .share code { color:var(--accent); font-size:13px } .share a { color:var(--accent) }
   footer { margin-top:auto; padding-top:28px; color:var(--muted); font-size:13px; text-align:center }
 </style>
 <body>
-  <h1>Mom Approves?</h1>
-  <p class="sub">Point at food. One call to Jev, nine typed questions, mom's rules as weights. No LLM.</p>
-  <label class="btn">📷 Take a photo<input type="file" accept="image/*" capture="environment" onchange="judge(this)"></label>
-  <div class="spin" id="spin" hidden>Asking mom…</div>
+  <h1 id="title">Mom Approves?</h1>
+  <p class="sub" id="subtitle">Point at food. One call to Jev, nine typed questions, mom's rules as weights. No LLM.</p>
+  <div class="tabs">
+    <button class="on" onclick="tab('mom')">🍲 Mom</button>
+    <button onclick="tab('bro')">😎 Bro</button>
+  </div>
+
+  <div class="pane on" id="pane-mom">
+    <label class="btn">📷 Take a photo<input type="file" accept="image/*" capture="environment" onchange="judgeMom(this)"></label>
+  </div>
+  <div class="pane" id="pane-bro">
+    <div class="thumbs"><img id="t-me" alt=""><img id="t-them" alt=""></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+      <label class="btn ghost">🤳 My selfie<input type="file" accept="image/*" capture="user" onchange="pick(this,'me')"></label>
+      <label class="btn ghost">💘 Their photo<input type="file" accept="image/*" onchange="pick(this,'them')"></label>
+    </div>
+    <button class="btn" id="broGo" onclick="judgeBro()" disabled>Ask bro</button>
+  </div>
+
+  <div class="spin" id="spin" hidden>Asking…</div>
   <div class="card" id="card">
-    <img class="preview" id="preview" alt="">
+    <div class="previews" id="previews"></div>
     <div class="verdict" id="verdict"></div>
     <div class="mom" id="mom"></div>
     <div class="meta" id="meta"></div>
-    <div>Mom score</div>
+    <div id="scoreLabel">Mom score</div>
     <div class="bar"><i id="bar"></i></div>
     <div class="chips" id="chips"></div>
   </div>
+
+  <section class="gallery"><h2>Recent verdicts</h2><div class="grid" id="grid"></div></section>
+
   <section class="help">
     <h2>How it works</h2>
     <ol>
       <li>Your photo goes to <b>Jev</b>, TypeSafe AI's decision model, as the <i>state</i>. One request.</li>
-      <li>Nine typed questions ride along: home-made? vegetables? warm meal? junk? portion? expired? allergen? category? food at all?</li>
-      <li>Jev answers each with a <b>calibrated probability</b> in one parallel pass. It never generates text, so there is nothing to parse and nothing to hallucinate.</li>
-      <li>Mom's rules are <b>weights in code</b> (home-made 0.25, vegetables 0.25, no junk 0.20, warm 0.15, portion 0.15). Change a number, not a prompt.</li>
-      <li>Confidence below 0.6, or no food in frame → <b>Show me closer</b> instead of a guess. Expired &gt; 0.5 caps the score at 0.1.</li>
+      <li>Typed questions ride along: home-made? vegetables? warm meal? junk? portion? expired? allergen? food at all? (Bro asks: same vibe? both smiling? style match? red flags?)</li>
+      <li>Jev answers each with a <b>calibrated probability</b> in one parallel pass. No text generated, nothing to parse, nothing to hallucinate.</li>
+      <li>The rules are <b>weights in code</b>. Change a number, not a prompt.</li>
+      <li>Low confidence, empty plate or no person → <b>Show me closer</b> instead of a guess.</li>
     </ol>
-    <p>Latency 0.3–1.5 s on a 768 px photo, all nine answers in one call. No LLM anywhere in the loop.</p>
+    <p>0.3–1.5 s per verdict. No LLM anywhere in the loop. <a href="/docs" style="color:var(--accent)">API docs</a>: <code>POST /decide</code> (photo), <code>POST /bro</code> (me, them), <code>GET /recent</code>.</p>
     <div class="share">
-      <img src="/qr.png" alt="QR to this page" width="132" height="132">
-      <div><b>Try it on your phone</b><br>same Wi-Fi, scan or open<br><code>{{LAN_URL}}</code></div>
+      <img src="/qr.png" alt="QR" width="132" height="132">
+      <div><b>Try it on your phone</b><br>scan or open<br><code>{{LAN_URL}}</code></div>
     </div>
   </section>
   <footer>Built in 50 minutes · OC AI Builders Lightning Hackathon, Irvine, Oct 21 2026 · Jev by TypeSafe AI</footer>
 <script>
 const ICON = {APPROVE:"✅", NOPE:"❌", REVIEW:"🤔"};
-const LABEL = {APPROVE:"Approved", NOPE:"Nope", REVIEW:"Show me closer"};
-async function judge(input){
-  const file = input.files[0]; if(!file) return;
-  preview.src = URL.createObjectURL(file);
-  card.classList.remove("show"); spin.hidden = false;
-  const fd = new FormData(); fd.append("photo", file);
-  try {
-    const r = await fetch("/decide", {method:"POST", body:fd});
-    const j = await r.json();
-    verdict.className = "verdict " + j.decision;
-    verdict.textContent = `${ICON[j.decision]} ${LABEL[j.decision]}`;
-    mom.textContent = `“${j.mom}”`;
-    meta.textContent = `${j.category} · allergen: ${j.allergen} · confidence ${j.confidence} · ${j.ms} ms`;
-    bar.style.width = Math.round(j.approve*100) + "%";
-    const keys = ["home_made","vegetables","warm_meal","junk","expired","portion"];
-    chips.innerHTML = keys.map(k => `<span class="chip">${k.replace("_"," ")} <b>${j.answers[k]}</b></span>`).join("");
-    card.classList.add("show");
-  } catch(e){ mom.textContent = "Server not reachable: " + e; card.classList.add("show"); }
-  finally { spin.hidden = true; input.value = ""; }
-}
+const LABEL = {mom:{APPROVE:"Approved", NOPE:"Nope", REVIEW:"Show me closer"}, bro:{APPROVE:"Go for it", NOPE:"Nah", REVIEW:"Maybe"}};
+const CHIPS = {mom:["home_made","vegetables","warm_meal","junk","expired","portion"], bro:["same_vibe","both_smiling","style_match","red_flag"]};
+let mode="mom", files={};
+function tab(m){ mode=m; document.querySelectorAll(".tabs button").forEach((b,i)=>b.classList.toggle("on",["mom","bro"][i]===m));
+  document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("on",p.id==="pane-"+m));
+  title.textContent = m==="mom" ? "Mom Approves?" : "Bro Approves?";
+  subtitle.textContent = m==="mom" ? "Point at food. One call to Jev, nine typed questions, mom's rules as weights. No LLM." : "Your selfie + their photo. Bro checks the vibe. Calibrated, brutally honest.";
+  card.classList.remove("show"); }
+function pick(input,who){ const f=input.files[0]; if(!f) return; files[who]=f; document.getElementById("t-"+who).src=URL.createObjectURL(f); broGo.disabled=!(files.me&&files.them); }
+function show(j, imgs){
+  previews.innerHTML = imgs.map(u=>`<img src="${u}">`).join("");
+  verdict.className = "verdict " + j.decision; verdict.textContent = `${ICON[j.decision]} ${LABEL[mode][j.decision]}`;
+  mom.textContent = `“${j.mom}”`;
+  meta.textContent = `${j.category} · ${mode==="mom"?"allergen":"red flag"}: ${j.allergen} · confidence ${j.confidence} · ${j.ms} ms`;
+  scoreLabel.textContent = mode==="mom" ? "Mom score" : "Match score";
+  bar.style.width="0"; setTimeout(()=>bar.style.width = Math.round(j.approve*100)+"%", 50);
+  chips.innerHTML = CHIPS[mode].map(k=>`<span class="chip">${k.replace(/_/g," ")} <b>${j.answers[k]}</b></span>`).join("");
+  card.classList.remove("show"); void card.offsetWidth; card.classList.add("show"); loadRecent(); }
+async function post(url, fd){ spin.hidden=false; card.classList.remove("show");
+  try { const r=await fetch(url,{method:"POST",body:fd}); return await r.json(); }
+  catch(e){ mom.textContent="Server not reachable: "+e; card.classList.add("show"); } finally { spin.hidden=true; } }
+async function judgeMom(input){ const f=input.files[0]; if(!f) return; const fd=new FormData(); fd.append("photo",f);
+  const j=await post("/decide",fd); input.value=""; if(j) show(j,[URL.createObjectURL(f)]); }
+async function judgeBro(){ const fd=new FormData(); fd.append("me",files.me); fd.append("them",files.them);
+  const j=await post("/bro",fd); if(j) show(j,[URL.createObjectURL(files.me),URL.createObjectURL(files.them)]); }
+async function loadRecent(){ try { const r=await fetch("/recent"); const list=await r.json();
+  grid.innerHTML=list.map(x=>`<div class="g" title="${x.mom}"><img src="${x.thumb}"><span>${ICON[x.decision]} ${x.mode} ${x.approve}</span></div>`).join(""); } catch(e){} }
+loadRecent();
 </script>
 </body>
 </html>
