@@ -146,7 +146,11 @@
     <p><b>One call to Jev</b> (TypeSafe AI decision model) with both photos and a handful of typed questions.<br>
     <b>Calibrated probabilities</b> back in ~1 s, no text, no LLM.<br>
     <b>Bro's taste is weights in code.</b> Low confidence → “get a better pic”, not a guess.</p>
-    <p><a href="/docs" style="color:var(--accent)">API</a>: <code>POST /bro</code> (me, them) · <code>GET /recent</code></p>
+    <p><a href="/docs" style="color:var(--accent)">API</a>: <code>POST /bro</code> (me, them) · <code>GET /recent</code> · header <code>X-TypeSafe-Key</code> for your own key</p>
+    <p id="budget" style="font-size:14px"></p>
+    <details><summary style="cursor:pointer;color:var(--accent)">Use your own TypeSafe key (no limits)</summary>
+      <p style="margin:8px 0"><input id="key" type="password" placeholder="typesafe api key" style="width:100%;padding:10px;border-radius:10px;border:1px solid #333;background:#111;color:#eee" oninput="saveKey(this.value)"> <small>stays in this browser only · <a href="https://console.typesafe.ai/keys" target="_blank" style="color:var(--accent)">get one</a></small></p>
+    </details>
     <div class="share">
       <img src="/qr.png" alt="QR" width="132" height="132">
       <div><b>Try it on your phone</b><br><code>{{LAN_URL}}</code></div>
@@ -177,8 +181,13 @@ function show(j, imgs){
   bar.style.width="0"; setTimeout(()=>bar.style.width = Math.round(j.approve*100)+"%", 50);
   chips.innerHTML = CHIPS[mode].map(k=>`<span class="chip">${k.replace(/_/g," ")} <b>${j.answers[k]}</b></span>`).join("");
   qrhero.classList.add("off"); card.classList.remove("show"); void card.offsetWidth; card.classList.add("show"); loadRecent(); }
+function saveKey(v){ try{ v ? localStorage.setItem("ts_key",v) : localStorage.removeItem("ts_key"); }catch(e){} }
+function myKey(){ try{ return localStorage.getItem("ts_key")||""; }catch(e){ return ""; } }
+async function loadBudget(){ try{ const b=await (await fetch("/budget")).json(); budget.textContent = myKey() ? "Using your own key." : `Shared key: ${b.you_left} checks left for you today · ${b.all_left} for everyone.`; }catch(e){} }
 async function post(url, fd){ spin.hidden=false; card.classList.remove("show");
-  try { const r=await fetch(url,{method:"POST",body:fd}); return await r.json(); }
+  try { const h={}; if(myKey()) h["X-TypeSafe-Key"]=myKey(); const r=await fetch(url,{method:"POST",body:fd,headers:h});
+        if(r.status===429){ const j=await r.json(); verdict.className="verdict REVIEW"; verdict.textContent="😴 "+ "Bro is tired"; mom.textContent=j.detail; meta.textContent=""; chips.innerHTML=""; previews.innerHTML=""; card.classList.add("show"); loadBudget(); return null; }
+        const j=await r.json(); loadBudget(); return j; }
   catch(e){ mom.textContent="Server not reachable: "+e; card.classList.add("show"); } finally { spin.hidden=true; } }
 async function judgeMom(input){ const f=input.files[0]; if(!f) return; const fd=new FormData(); fd.append("photo",f);
   const j=await post("/decide",fd); input.value=""; if(j) show(j,[URL.createObjectURL(f)]); }
@@ -213,7 +222,7 @@ function snap(){ const c=document.createElement("canvas"); c.width=video.videoWi
     if(camTarget==="mom"){ const fd=new FormData(); fd.append("photo",f); const j=await post("/decide",fd); if(j) show(j,[URL.createObjectURL(f)]); }
     else { files[camTarget]=f; document.getElementById("t-"+camTarget).src=URL.createObjectURL(f); broGo.disabled=!(files.me&&files.them); }
   },"image/jpeg",.9); }
-loadRecent(); setInterval(loadRecent, 8000);
+loadRecent(); loadBudget(); try{ key.value=myKey(); }catch(e){} setInterval(loadRecent, 8000);
 </script>
 </body>
 </html>
