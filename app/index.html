@@ -65,6 +65,15 @@
   .qrhero img { border-radius:14px; background:#fff; padding:8px } .qrhero b { font-size:26px } .qrhero code { color:var(--accent); font-size:15px } .qrhero small { color:var(--muted) }
   .qrhero.off { display:none }
   @media (max-width:560px){ .qrhero { flex-direction:column; text-align:center } .qrhero img { width:200px; height:200px } }
+  .deck { width:min(92vw,980px); height:min(62vh,560px); position:relative; cursor:pointer }
+  .slide { position:absolute; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:10px; padding:32px; border-radius:28px;
+           background:linear-gradient(160deg,#2b2150,#15151b 60%); border:1px solid rgba(167,139,250,.25); box-shadow:0 0 80px rgba(167,139,250,.18) }
+  .slide.on { display:flex; animation:pop .45s cubic-bezier(.2,1.4,.4,1) }
+  .slide .big { font-size:96px; line-height:1; filter:drop-shadow(0 0 30px rgba(251,191,36,.35)) }
+  .slide h2 { font-size:clamp(34px,5vw,58px); margin:0; background:linear-gradient(90deg,#c4b5fd,#f0abfc,#fbbf24); -webkit-background-clip:text; background-clip:text; color:transparent; letter-spacing:-.02em }
+  .slide p { font-size:clamp(20px,2.6vw,30px); color:var(--muted); margin:0; line-height:1.45 } .slide p b { color:var(--fg) } .slide a { color:var(--accent) }
+  .slide img { margin-top:10px; border-radius:12px; background:#fff; padding:6px }
+  .nav { display:flex; align-items:center; gap:14px; margin-top:14px } #dots span { display:inline-block; width:8px; height:8px; border-radius:50%; background:#3a3a44; margin:0 3px } #dots span.on { background:var(--accent) }
   .pitch { max-width:720px; text-align:left; background:var(--card); border:1px solid rgba(255,255,255,.07); border-radius:24px; padding:28px 32px; animation:pop .5s }
   .pitch h2 { font-size:40px; margin:0 0 6px; background:linear-gradient(90deg,#c4b5fd,#f0abfc,#fbbf24); -webkit-background-clip:text; background-clip:text; color:transparent }
   .pitch .lead { font-size:22px; margin:6px 0 14px } .pitch ul { font-size:19px; line-height:1.55; padding-left:22px; margin:0 0 14px } .pitch li { margin:4px 0 } .pitch b { color:var(--fg) } .pitch ul { color:var(--muted) }
@@ -100,23 +109,18 @@
   </div>
 
   <div class="pane" id="pane-pitch">
-    <div class="pitch">
-      <h2>Mom Approves?</h2>
-      <p class="lead">Point your phone at food. <b>Mom decides in one second.</b></p>
-      <ul>
-        <li><b>One call to Jev</b>, TypeSafe's decision model, with the photo and nine typed questions.</li>
-        <li><b>Calibrated probabilities</b>, not text. Nothing to parse, nothing to hallucinate.</li>
-        <li><b>Mom's rules are weights in code.</b> Stricter mom? Change a number, not a prompt.</li>
-        <li><b>Not sure → “show me closer.”</b> Confidence-gated, never a guess.</li>
-        <li><b>Same engine, new judge:</b> Bro compares two photos. Friend, partner, or “that's you”.</li>
-      </ul>
-      <p class="lead">No LLM anywhere. ~1 s per verdict. Built in 50 minutes.</p>
-      <div class="team">
-        <a href="https://github.com/fortunto2" target="_blank">🐙 fortunto2 · Rustam, backend</a>
-        <a href="https://github.com/caiboyang" target="_blank">🐙 caiboyang · Brian, Swift</a>
-        <a href="https://github.com/fortunto2/mama-approves" target="_blank">📦 github.com/fortunto2/mama-approves</a>
-      </div>
+    <div class="deck" id="deck">
+      <section class="slide on"><div class="big">🍲</div><h2>Mom Approves?</h2><p>Point your phone at food.<br><b>Mom decides in one second.</b></p></section>
+      <section class="slide"><div class="big">⚡</div><h2>One call to Jev</h2><p>TypeSafe's decision model sees the photo.<br>Nine typed questions, one request, <b>~1 second</b>.</p></section>
+      <section class="slide"><div class="big">🎯</div><h2>Probabilities, not text</h2><p>Calibrated answers your code can branch on.<br><b>Nothing to parse. Nothing to hallucinate.</b></p></section>
+      <section class="slide"><div class="big">🎚️</div><h2>Mom is five numbers</h2><p>home-made 0.25 · vegetables 0.25 · no junk 0.20 · warm 0.15 · portion 0.15<br><b>Stricter mom? Change a number, not a prompt.</b></p></section>
+      <section class="slide"><div class="big">🤔</div><h2>Not sure? "Show me closer."</h2><p>Confidence below 0.6, empty plate, no face →<br><b>never a guess.</b></p></section>
+      <section class="slide"><div class="big">😎</div><h2>Same engine, new judge</h2><p>Bro compares two photos.<br><b>Partner, best friend, gym buddy… or "that's you."</b></p></section>
+      <section class="slide"><div class="big">🚫🤖</div><h2>No LLM anywhere</h2><p>~1 s per verdict · $0.04 per million tokens<br><b>Built in 50 minutes.</b></p></section>
+      <section class="slide"><div class="big">🐙</div><h2>Team</h2><p><a href="https://github.com/fortunto2" target="_blank">fortunto2</a> · Rustam · backend<br><a href="https://github.com/caiboyang" target="_blank">caiboyang</a> · Brian · Swift<br><a href="https://github.com/fortunto2/mama-approves" target="_blank">github.com/fortunto2/mama-approves</a></p><img src="/qr.png" width="160" height="160" alt="QR"></section>
     </div>
+    <div class="nav"><button class="btn ghost" onclick="slide(-1)">←</button><span id="dots"></span><button class="btn ghost" onclick="slide(1)">→</button></div>
+    <small style="color:var(--muted)">arrow keys · space · click the slide</small>
   </div>
   <div class="qrhero" id="qrhero">
     <img src="/qr.png" alt="QR" width="260" height="260">
@@ -180,6 +184,10 @@ async function judgeBro(){ const fd=new FormData(); fd.append("me",files.me); fd
   const j=await post("/bro",fd); if(j) show(j,[URL.createObjectURL(files.me),URL.createObjectURL(files.them)]); }
 async function loadRecent(){ try { const r=await fetch("/recent"); const list=await r.json();
   window.RECENT=list; grid.innerHTML=list.length ? list.map((x,i)=>`<div class="g ${x.thumb2?"pair":""}" title="${x.mom}" onclick="reopen(${i})">${x.thumb2?`<img src="${x.thumb2}"><img src="${x.thumb}">`:`<img src="${x.thumb}">`}<span>${ICON[x.decision]} ${x.mode==="mom"?"Mom":"Bro"} · ${x.approve}${x.mode==="bro"?" · "+x.category:""}</span></div>`).join("") : `<div class="empty">Nothing judged yet. Be the first.</div>`; } catch(e){} }
+let cur=0; const slides=()=>document.querySelectorAll(".slide");
+function slide(d){ const n=slides().length; cur=(cur+d+n)%n; slides().forEach((x,i)=>x.classList.toggle("on",i===cur)); dots.innerHTML=[...Array(n)].map((_,i)=>`<span class="${i===cur?"on":""}"></span>`).join(""); }
+document.addEventListener("keydown",e=>{ if(mode!=="pitch") return; if(e.key==="ArrowRight"||e.key===" "){e.preventDefault();slide(1)} if(e.key==="ArrowLeft") slide(-1); });
+deck.addEventListener("click",e=>{ if(e.target.tagName!=="A") slide(1); }); slide(0);
 function reopen(i){ const x=RECENT[i]; if(!x) return; mode = x.mode==="bro" ? "bro" : "mom";
   document.querySelectorAll(".tabs button").forEach((b,k)=>b.classList.toggle("on",["mom","bro","pitch"][k]===mode)); title.style.display=subtitle.style.display=hero.style.display=qrhero.style.display="";
   show(x, x.thumb2 ? [x.thumb2, x.thumb] : [x.thumb]); card.scrollIntoView({behavior:"smooth", block:"start"}); }
