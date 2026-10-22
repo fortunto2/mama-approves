@@ -153,7 +153,10 @@ async function judgeMom(input){ const f=input.files[0]; if(!f) return; const fd=
 async function judgeBro(){ const fd=new FormData(); fd.append("me",files.me); fd.append("them",files.them);
   const j=await post("/bro",fd); if(j) show(j,[URL.createObjectURL(files.me),URL.createObjectURL(files.them)]); }
 async function loadRecent(){ try { const r=await fetch("/recent"); const list=await r.json();
-  grid.innerHTML=list.length ? list.map(x=>`<div class="g ${x.thumb2?"pair":""}" title="${x.mom}">${x.thumb2?`<img src="${x.thumb2}"><img src="${x.thumb}">`:`<img src="${x.thumb}">`}<span>${ICON[x.decision]} ${x.mode==="mom"?"Mom":"Bro"} · ${x.approve}${x.mode==="bro"?" · "+x.category:""}</span></div>`).join("") : `<div class="empty">Nothing judged yet. Be the first.</div>`; } catch(e){} }
+  window.RECENT=list; grid.innerHTML=list.length ? list.map((x,i)=>`<div class="g ${x.thumb2?"pair":""}" title="${x.mom}" onclick="reopen(${i})">${x.thumb2?`<img src="${x.thumb2}"><img src="${x.thumb}">`:`<img src="${x.thumb}">`}<span>${ICON[x.decision]} ${x.mode==="mom"?"Mom":"Bro"} · ${x.approve}${x.mode==="bro"?" · "+x.category:""}</span></div>`).join("") : `<div class="empty">Nothing judged yet. Be the first.</div>`; } catch(e){} }
+function reopen(i){ const x=RECENT[i]; if(!x) return; mode = x.mode==="bro" ? "bro" : "mom";
+  document.querySelectorAll(".tabs button").forEach((b,k)=>b.classList.toggle("on",["mom","bro"][k]===mode));
+  show(x, x.thumb2 ? [x.thumb2, x.thumb] : [x.thumb]); card.scrollIntoView({behavior:"smooth", block:"start"}); }
 let camTarget=null, facing="user", stream=null;
 async function openCam(target, face){ camTarget=target; facing=face; await startCam(); }
 async function startCam(){ if(stream) stream.getTracks().forEach(t=>t.stop());
