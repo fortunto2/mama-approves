@@ -73,7 +73,7 @@
   .slide h2 { font-size:clamp(34px,5vw,58px); margin:0; background:linear-gradient(90deg,#c4b5fd,#f0abfc,#fbbf24); -webkit-background-clip:text; background-clip:text; color:transparent; letter-spacing:-.02em }
   .slide p { font-size:clamp(20px,2.6vw,30px); color:var(--muted); margin:0; line-height:1.45 } .slide p b { color:var(--fg) } .slide a { color:var(--accent) }
   .slide img { margin-top:10px; border-radius:12px; background:#fff; padding:6px }
-  .slide.feat { gap:14px; padding:22px } .hero2 { display:flex; gap:18px; align-items:center; width:100% } .hero2 .pics { display:flex; gap:8px; flex:0 0 46% } .hero2 .pics img { width:50%; aspect-ratio:1; object-fit:cover; border-radius:16px }
+  .slide.feat { gap:14px; padding:22px } .hero2 { display:flex; gap:18px; align-items:center; width:100% } .hero2 .pics { display:flex; gap:8px; flex:0 0 46% } .hero2 .pics img { width:50%; aspect-ratio:1; object-fit:cover; border-radius:16px } .slide.feat .hero2 { flex-direction:column; gap:18px } .slide.feat .hero2 .pics { flex:0 0 auto; width:min(60%,520px) } .slide.feat .hero2 .txt { text-align:center }
   .hero2 .txt { text-align:left; flex:1 } .hero2 .v { font-size:clamp(34px,4.5vw,56px); font-weight:800; letter-spacing:-.03em; text-shadow:0 0 40px currentColor } .hero2 .v.APPROVE { color:var(--ok) } .hero2 .v.NOPE { color:var(--no) } .hero2 .v.REVIEW { color:var(--hm) }
   .hero2 .q { font-size:clamp(18px,2.2vw,26px); font-style:italic; margin:8px 0 } .hero2 .m { color:var(--muted); font-size:16px } .hero2 .chips { margin-top:10px }
   .live { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin:6px 0 }
@@ -118,7 +118,7 @@
       <section class="slide on"><div class="big">🍲</div><h2>Mom Approves?</h2><p>Point your phone at food.<br><b>Mom decides in one second.</b></p></section>
       <section class="slide"><div class="big">⚡</div><h2>One call to Jev</h2><p>TypeSafe's decision model sees the photo. Nine typed questions, one request, ~1 s.<br><b>Calibrated probabilities, not text. Nothing to hallucinate.</b></p></section>
       <section class="slide"><div class="big">🎚️</div><h2>Mom is five numbers</h2><p>home-made · vegetables · no junk · warm · portion<br><b>Stricter mom? Change a number, not a prompt.</b><br>Not sure → <b>"show me closer"</b>, never a guess.</p></section>
-      <section class="slide feat"><div class="hero2" id="hero2"></div><div class="live" id="live"></div></section>
+      <section class="slide feat"><div class="hero2" id="hero2"></div><div class="live" id="live" hidden></div></section>
       <section class="slide"><div class="big">🐙</div><h2>Team</h2><p><a href="https://github.com/caiboyang" target="_blank">caiboyang</a> · <b>Brian</b> · Swift front<br><a href="https://github.com/fortunto2" target="_blank">fortunto2</a> · <b>Rustam</b> · backend<br><a href="https://github.com/fortunto2/mama-approves" target="_blank">github.com/fortunto2/mama-approves</a></p><p><b>No LLM anywhere. Built in 50 minutes.</b></p><img src="/qr.png" width="150" height="150" alt="QR"></section>
     </div>
     <div class="nav"><button class="btn ghost" onclick="slide(-1)">←</button><span id="dots"></span><button class="btn ghost" onclick="slide(1)">→</button></div>
