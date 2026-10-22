@@ -11,7 +11,6 @@ from pathlib import Path
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 import io
-import socket
 
 import qrcode
 from typesafe_sdk import TypeSafeClient
@@ -36,15 +35,15 @@ async def decide_photo(photo: UploadFile = File(...)):
 
 
 def lan_url() -> str:
-    """Address other phones on this Wi-Fi can reach: the Mac's LAN IP, not 127.0.0.1."""
-    try:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.connect(("8.8.8.8", 80))
-        ip = sock.getsockname()[0]
-        sock.close()
-    except OSError:
-        ip = "127.0.0.1"
-    return f"http://{ip}:8787/"
+    """Address other phones on this Wi-Fi can reach. Prefer the Wi-Fi interface (en0): the
+    default route here goes through WARP (100.96.x.x), which nobody else can reach."""
+    import subprocess
+
+    for iface in ("en0", "en1"):
+        r = subprocess.run(["ipconfig", "getifaddr", iface], capture_output=True, text=True)
+        if r.returncode == 0 and r.stdout.strip():
+            return f"http://{r.stdout.strip()}:8787/"
+    return "http://127.0.0.1:8787/"
 
 
 @app.get("/qr.png")
