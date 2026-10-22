@@ -52,6 +52,9 @@
   .empty { color:var(--muted); font-size:14px; grid-column:1/-1; padding:18px; text-align:center; border:1px dashed #2f2f3a; border-radius:12px }
   .chip { border:1px solid rgba(255,255,255,.06) }
   .verdict { text-shadow:0 0 40px currentColor }
+  .cam { position:fixed; inset:0; background:rgba(0,0,0,.9); display:none; flex-direction:column; align-items:center; justify-content:center; gap:16px; z-index:9 }
+  .cam.on { display:flex } .cam video { width:min(92vw,560px); border-radius:18px; background:#000; transform:scaleX(-1) } .cam video.back { transform:none }
+  .cam .row { display:flex; gap:12px }
 </style>
 <body>
   <div class="hero" id="hero">🍲</div>
@@ -63,13 +66,17 @@
   </div>
 
   <div class="pane on" id="pane-mom">
-    <label class="btn">📷 Take a photo<input type="file" accept="image/*" capture="environment" onchange="judgeMom(this)"></label>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+      <button class="btn" onclick="openCam('mom','environment')">📷 Take a photo</button>
+      <label class="btn ghost">🖼️ Pick a file<input type="file" accept="image/*" onchange="judgeMom(this)"></label>
+    </div>
   </div>
   <div class="pane" id="pane-bro">
     <div class="thumbs"><img id="t-me" alt=""><img id="t-them" alt=""></div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
-      <label class="btn ghost">🙂 My selfie<input type="file" accept="image/*" capture="user" onchange="pick(this,'me')"></label>
-      <label class="btn ghost">💘 Their photo<input type="file" accept="image/*" onchange="pick(this,'them')"></label>
+      <button class="btn ghost" onclick="openCam('me','user')">🙂 My selfie</button>
+      <button class="btn ghost" onclick="openCam('them','environment')">💘 Their photo</button>
+      <label class="btn ghost">🖼️ File<input type="file" accept="image/*" onchange="pick(this,'them')"></label>
     </div>
     <button class="btn" id="broGo" onclick="judgeBro()" disabled>Ask bro</button>
   </div>
@@ -98,6 +105,8 @@
       <div><b>Try it on your phone</b><br><code>{{LAN_URL}}</code></div>
     </div>
   </section>
+  <div class="cam" id="cam"><video id="video" autoplay playsinline muted></video>
+    <div class="row"><button class="btn" onclick="snap()">📸 Snap</button><button class="btn ghost" onclick="flip()">🔄 Flip</button><button class="btn ghost" onclick="closeCam()">✕</button></div></div>
   <footer>Built in 50 minutes · OC AI Builders Lightning Hackathon, Irvine, Oct 21 2026 · Jev by TypeSafe AI</footer>
 <script>
 const ICON = {APPROVE:"✅", NOPE:"❌", REVIEW:"🤔"};
@@ -128,6 +137,20 @@ async function judgeBro(){ const fd=new FormData(); fd.append("me",files.me); fd
   const j=await post("/bro",fd); if(j) show(j,[URL.createObjectURL(files.me),URL.createObjectURL(files.them)]); }
 async function loadRecent(){ try { const r=await fetch("/recent"); const list=await r.json();
   grid.innerHTML=list.length ? list.map(x=>`<div class="g" title="${x.mom}"><img src="${x.thumb}"><span>${ICON[x.decision]} ${x.mode==="mom"?"Mom":"Bro"} · ${x.approve}</span></div>`).join("") : `<div class="empty">Nothing judged yet. Be the first.</div>`; } catch(e){} }
+let camTarget=null, facing="user", stream=null;
+async function openCam(target, face){ camTarget=target; facing=face; await startCam(); }
+async function startCam(){ if(stream) stream.getTracks().forEach(t=>t.stop());
+  try { stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:facing, width:{ideal:1280}}, audio:false}); }
+  catch(e){ alert("Camera blocked: "+e.message+"\nUse Pick a file instead."); return; }
+  video.srcObject=stream; video.classList.toggle("back", facing!=="user"); cam.classList.add("on"); }
+function flip(){ facing = facing==="user" ? "environment" : "user"; startCam(); }
+function closeCam(){ if(stream) stream.getTracks().forEach(t=>t.stop()); stream=null; cam.classList.remove("on"); }
+function snap(){ const c=document.createElement("canvas"); c.width=video.videoWidth; c.height=video.videoHeight; const g=c.getContext("2d");
+  if(facing==="user"){ g.translate(c.width,0); g.scale(-1,1); } g.drawImage(video,0,0);
+  c.toBlob(async b=>{ const f=new File([b],"snap.jpg",{type:"image/jpeg"}); closeCam();
+    if(camTarget==="mom"){ const fd=new FormData(); fd.append("photo",f); const j=await post("/decide",fd); if(j) show(j,[URL.createObjectURL(f)]); }
+    else { files[camTarget]=f; document.getElementById("t-"+camTarget).src=URL.createObjectURL(f); broGo.disabled=!(files.me&&files.them); }
+  },"image/jpeg",.9); }
 loadRecent();
 </script>
 </body>
