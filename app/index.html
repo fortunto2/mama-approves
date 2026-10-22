@@ -65,6 +65,10 @@
   .qrhero img { border-radius:14px; background:#fff; padding:8px } .qrhero b { font-size:26px } .qrhero code { color:var(--accent); font-size:15px } .qrhero small { color:var(--muted) }
   .qrhero.off { display:none }
   @media (max-width:560px){ .qrhero { flex-direction:column; text-align:center } .qrhero img { width:200px; height:200px } }
+  .pitch { max-width:720px; text-align:left; background:var(--card); border:1px solid rgba(255,255,255,.07); border-radius:24px; padding:28px 32px; animation:pop .5s }
+  .pitch h2 { font-size:40px; margin:0 0 6px; background:linear-gradient(90deg,#c4b5fd,#f0abfc,#fbbf24); -webkit-background-clip:text; background-clip:text; color:transparent }
+  .pitch .lead { font-size:22px; margin:6px 0 14px } .pitch ul { font-size:19px; line-height:1.55; padding-left:22px; margin:0 0 14px } .pitch li { margin:4px 0 } .pitch b { color:var(--fg) } .pitch ul { color:var(--muted) }
+  .team { display:flex; flex-wrap:wrap; gap:10px; margin-top:8px } .team a { color:var(--accent); text-decoration:none; background:#26262e; padding:8px 14px; border-radius:999px; font-size:15px }
 </style>
 <body>
   <div class="hero" id="hero">🍲</div>
@@ -73,6 +77,7 @@
   <div class="tabs">
     <button class="on" onclick="tab('mom')">🍲 Mom</button>
     <button onclick="tab('bro')">😎 Bro</button>
+    <button onclick="tab('pitch')">🎤 Pitch</button>
   </div>
 
   <div class="pane on" id="pane-mom">
@@ -94,6 +99,25 @@
     <button class="btn" id="broGo" onclick="judgeBro()" disabled>Ask bro</button>
   </div>
 
+  <div class="pane" id="pane-pitch">
+    <div class="pitch">
+      <h2>Mom Approves?</h2>
+      <p class="lead">Point your phone at food. <b>Mom decides in one second.</b></p>
+      <ul>
+        <li><b>One call to Jev</b>, TypeSafe's decision model, with the photo and nine typed questions.</li>
+        <li><b>Calibrated probabilities</b>, not text. Nothing to parse, nothing to hallucinate.</li>
+        <li><b>Mom's rules are weights in code.</b> Stricter mom? Change a number, not a prompt.</li>
+        <li><b>Not sure → “show me closer.”</b> Confidence-gated, never a guess.</li>
+        <li><b>Same engine, new judge:</b> Bro compares two photos. Friend, partner, or “that's you”.</li>
+      </ul>
+      <p class="lead">No LLM anywhere. ~1 s per verdict. Built in 50 minutes.</p>
+      <div class="team">
+        <a href="https://github.com/fortunto2" target="_blank">🐙 fortunto2 · Rustam, backend</a>
+        <a href="https://github.com/caiboyang" target="_blank">🐙 caiboyang · Brian, Swift</a>
+        <a href="https://github.com/fortunto2/mama-approves" target="_blank">📦 github.com/fortunto2/mama-approves</a>
+      </div>
+    </div>
+  </div>
   <div class="qrhero" id="qrhero">
     <img src="/qr.png" alt="QR" width="260" height="260">
     <div><b>Scan to play</b><br><code>{{LAN_URL}}</code><br><small>Mom judges your food. Bro judges your date.</small></div>
@@ -130,10 +154,12 @@ const ICON = {APPROVE:"✅", NOPE:"❌", REVIEW:"🤔"};
 const LABEL = {mom:{APPROVE:"Approved", NOPE:"Nope", REVIEW:"Show me closer"}, bro:{APPROVE:"Go for it", NOPE:"Nah", REVIEW:"Maybe"}};
 const CHIPS = {mom:["home_made","vegetables","warm_meal","junk","expired","portion"], bro:["same_person","friends","same_vibe","dress_match","style_match","both_smiling","red_flag"]};
 let mode="mom", files={};
-function tab(m){ mode=m; document.querySelectorAll(".tabs button").forEach((b,i)=>b.classList.toggle("on",["mom","bro"][i]===m));
+function tab(m){ mode=m; document.querySelectorAll(".tabs button").forEach((b,i)=>b.classList.toggle("on",["mom","bro","pitch"][i]===m));
   document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("on",p.id==="pane-"+m));
-  title.textContent = m==="mom" ? "Mom Approves?" : "Bro Approves?"; hero.textContent = m==="mom" ? "🍲" : "😎";
-  subtitle.textContent = m==="mom" ? "Point at food. Mom decides in one second." : "Your selfie + their photo. Bro checks the vibe.";
+  const pitch = m==="pitch"; title.style.display = pitch ? "none" : ""; subtitle.style.display = pitch ? "none" : ""; hero.style.display = pitch ? "none" : "";
+  qrhero.style.display = pitch ? "none" : "";
+  if(!pitch){ title.textContent = m==="mom" ? "Mom Approves?" : "Bro Approves?"; hero.textContent = m==="mom" ? "🍲" : "😎";
+  subtitle.textContent = m==="mom" ? "Point at food. Mom decides in one second." : "Your selfie + their photo. Bro checks the vibe."; }
   card.classList.remove("show"); qrhero.classList.remove("off"); }
 function pick(input,who){ const f=input.files[0]; if(!f) return; files[who]=f; document.getElementById("t-"+who).src=URL.createObjectURL(f); broGo.disabled=!(files.me&&files.them); }
 function show(j, imgs){
@@ -155,7 +181,7 @@ async function judgeBro(){ const fd=new FormData(); fd.append("me",files.me); fd
 async function loadRecent(){ try { const r=await fetch("/recent"); const list=await r.json();
   window.RECENT=list; grid.innerHTML=list.length ? list.map((x,i)=>`<div class="g ${x.thumb2?"pair":""}" title="${x.mom}" onclick="reopen(${i})">${x.thumb2?`<img src="${x.thumb2}"><img src="${x.thumb}">`:`<img src="${x.thumb}">`}<span>${ICON[x.decision]} ${x.mode==="mom"?"Mom":"Bro"} · ${x.approve}${x.mode==="bro"?" · "+x.category:""}</span></div>`).join("") : `<div class="empty">Nothing judged yet. Be the first.</div>`; } catch(e){} }
 function reopen(i){ const x=RECENT[i]; if(!x) return; mode = x.mode==="bro" ? "bro" : "mom";
-  document.querySelectorAll(".tabs button").forEach((b,k)=>b.classList.toggle("on",["mom","bro"][k]===mode));
+  document.querySelectorAll(".tabs button").forEach((b,k)=>b.classList.toggle("on",["mom","bro","pitch"][k]===mode)); title.style.display=subtitle.style.display=hero.style.display=qrhero.style.display="";
   show(x, x.thumb2 ? [x.thumb2, x.thumb] : [x.thumb]); card.scrollIntoView({behavior:"smooth", block:"start"}); }
 let camTarget=null, facing="user", stream=null;
 async function openCam(target, face){ camTarget=target; facing=face; await startCam(); }
