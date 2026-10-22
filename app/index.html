@@ -3,6 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mom Approves?</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍲</text></svg>">
 <style>
   :root { --bg:#0f0f12; --card:#1a1a20; --fg:#f4f4f5; --muted:#9a9aa3; --ok:#34d399; --no:#f87171; --hm:#fbbf24; --accent:#a78bfa; }
   * { box-sizing:border-box }
@@ -31,6 +32,7 @@
   .previews { display:flex; gap:10px; margin-bottom:16px } .previews img { flex:1; min-width:0; max-height:220px; object-fit:cover; border-radius:14px }
   .spin { color:var(--muted); margin-top:8px; animation:blink 1s infinite } @keyframes blink { 50%{opacity:.3} }
   .thumbs { display:flex; gap:12px } .slot { position:relative; width:120px; height:120px; border-radius:16px; overflow:hidden; cursor:pointer; background:#1f1f27; border:2px dashed #3a3a44 }
+  .thumbs .slot img { width:100%; height:100%; border:0; border-radius:0 }
   .slot span { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:15px } .slot img { width:100%; height:100%; object-fit:cover; display:none }
   .slot img[src] { display:block } .slot img[src] + span { display:none } .thumbs img { width:84px; height:84px; object-fit:cover; border-radius:12px; background:#26262e; border:2px dashed #3a3a44 } .thumbs img[src] { border-style:solid; border-color:var(--accent) }
   .gallery { width:100%; max-width:480px; margin-top:36px } .gallery h2 { font-size:20px; margin:0 0 12px }
