@@ -73,6 +73,9 @@
   .slide h2 { font-size:clamp(34px,5vw,58px); margin:0; background:linear-gradient(90deg,#c4b5fd,#f0abfc,#fbbf24); -webkit-background-clip:text; background-clip:text; color:transparent; letter-spacing:-.02em }
   .slide p { font-size:clamp(20px,2.6vw,30px); color:var(--muted); margin:0; line-height:1.45 } .slide p b { color:var(--fg) } .slide a { color:var(--accent) }
   .slide img { margin-top:10px; border-radius:12px; background:#fff; padding:6px }
+  .slide.feat { gap:14px; padding:22px } .hero2 { display:flex; gap:18px; align-items:center; width:100% } .hero2 .pics { display:flex; gap:8px; flex:0 0 46% } .hero2 .pics img { width:50%; aspect-ratio:1; object-fit:cover; border-radius:16px }
+  .hero2 .txt { text-align:left; flex:1 } .hero2 .v { font-size:clamp(34px,4.5vw,56px); font-weight:800; letter-spacing:-.03em; text-shadow:0 0 40px currentColor } .hero2 .v.APPROVE { color:var(--ok) } .hero2 .v.NOPE { color:var(--no) } .hero2 .v.REVIEW { color:var(--hm) }
+  .hero2 .q { font-size:clamp(18px,2.2vw,26px); font-style:italic; margin:8px 0 } .hero2 .m { color:var(--muted); font-size:16px } .hero2 .chips { margin-top:10px }
   .live { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin:6px 0 }
   .live .g { width:150px; height:150px; animation:pop .4s } .live .g.pair { width:230px } .live .g span { font-size:14px }
   .nav { display:flex; align-items:center; gap:14px; margin-top:14px } #dots span { display:inline-block; width:8px; height:8px; border-radius:50%; background:#3a3a44; margin:0 3px } #dots span.on { background:var(--accent) }
@@ -115,7 +118,7 @@
       <section class="slide on"><div class="big">🍲</div><h2>Mom Approves?</h2><p>Point your phone at food.<br><b>Mom decides in one second.</b></p></section>
       <section class="slide"><div class="big">⚡</div><h2>One call to Jev</h2><p>TypeSafe's decision model sees the photo. Nine typed questions, one request, ~1 s.<br><b>Calibrated probabilities, not text. Nothing to hallucinate.</b></p></section>
       <section class="slide"><div class="big">🎚️</div><h2>Mom is five numbers</h2><p>home-made · vegetables · no junk · warm · portion<br><b>Stricter mom? Change a number, not a prompt.</b><br>Not sure → <b>"show me closer"</b>, never a guess.</p></section>
-      <section class="slide"><h2>Live verdicts</h2><div class="live" id="live"></div><p><b>Same engine, new judge:</b> Bro compares two photos. Partner, friend… or "that's you."</p></section>
+      <section class="slide feat"><div class="hero2" id="hero2"></div><div class="live" id="live"></div></section>
       <section class="slide"><div class="big">🐙</div><h2>Team</h2><p><a href="https://github.com/caiboyang" target="_blank">caiboyang</a> · <b>Brian</b> · Swift front<br><a href="https://github.com/fortunto2" target="_blank">fortunto2</a> · <b>Rustam</b> · backend<br><a href="https://github.com/fortunto2/mama-approves" target="_blank">github.com/fortunto2/mama-approves</a></p><p><b>No LLM anywhere. Built in 50 minutes.</b></p><img src="/qr.png" width="150" height="150" alt="QR"></section>
     </div>
     <div class="nav"><button class="btn ghost" onclick="slide(-1)">←</button><span id="dots"></span><button class="btn ghost" onclick="slide(1)">→</button></div>
@@ -184,7 +187,11 @@ async function judgeBro(){ const fd=new FormData(); fd.append("me",files.me); fd
 async function loadRecent(){ try { const r=await fetch("/recent"); const list=await r.json();
   window.RECENT=list; grid.innerHTML=list.length ? list.map((x,i)=>`<div class="g ${x.thumb2?"pair":""}" title="${x.mom}" onclick="reopen(${i})">${x.thumb2?`<img src="${x.thumb2}"><img src="${x.thumb}">`:`<img src="${x.thumb}">`}<span>${ICON[x.decision]} ${x.mode==="mom"?"Mom":"Bro"} · ${x.approve}${x.mode==="bro"?" · "+x.category:""}</span></div>`).join("") : `<div class="empty">Nothing judged yet. Be the first.</div>`; } catch(e){} }
 let cur=0; const slides=()=>document.querySelectorAll(".slide");
-function renderLive(){ const list=(window.RECENT||[]); const pairs=list.filter(x=>x.thumb2).slice(0,2), singles=list.filter(x=>!x.thumb2).slice(0,2);
+function renderLive(){ const list=(window.RECENT||[]); const allPairs=list.filter(x=>x.thumb2);
+  const star = allPairs.find(x=>x.decision==="APPROVE") || allPairs[0];
+  if(star){ const L={APPROVE:"Go for it",NOPE:"Nah",REVIEW:"Maybe"}; hero2.innerHTML=`<div class="pics"><img src="${star.thumb2}"><img src="${star.thumb}"></div><div class="txt"><div class="v ${star.decision}">${ICON[star.decision]} ${L[star.decision]}</div><div class="q">“${star.mom}”</div><div class="m">reads as: ${star.category} · red flag: ${star.allergen} · confidence ${star.confidence} · ${star.ms} ms</div><div class="chips">${["friends","same_vibe","both_smiling","dress_match","same_person"].map(k=>`<span class="chip">${k.replace(/_/g," ")} <b>${star.answers[k]}</b></span>`).join("")}</div></div>`; }
+  else hero2.innerHTML="<h2>Live verdicts</h2>";
+  const pairs=allPairs.filter(x=>x!==star).slice(0,2), singles=list.filter(x=>!x.thumb2).slice(0,2);
   live.innerHTML=[...pairs,...singles].map(x=>`<div class="g ${x.thumb2?"pair":""}">${x.thumb2?`<img src="${x.thumb2}"><img src="${x.thumb}">`:`<img src="${x.thumb}">`}<span>${ICON[x.decision]} ${x.mode==="mom"?"Mom":"Bro"} · ${x.approve}${x.mode==="bro"?" · "+x.category:""}</span></div>`).join("") || "<p>No verdicts yet</p>"; }
 function slide(d){ const n=slides().length; cur=(cur+d+n)%n; slides().forEach((x,i)=>x.classList.toggle("on",i===cur)); if(cur===3) renderLive(); dots.innerHTML=[...Array(n)].map((_,i)=>`<span class="${i===cur?"on":""}"></span>`).join(""); }
 document.addEventListener("keydown",e=>{ if(mode!=="pitch") return; if(e.key==="ArrowRight"||e.key===" "){e.preventDefault();slide(1)} if(e.key==="ArrowLeft") slide(-1); });
