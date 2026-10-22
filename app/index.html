@@ -186,6 +186,7 @@ function myKey(){ try{ return localStorage.getItem("ts_key")||""; }catch(e){ ret
 async function loadBudget(){ try{ const b=await (await fetch("/budget")).json(); budget.textContent = myKey() ? "Using your own key." : `Shared key: ${b.you_left} checks left for you today · ${b.all_left} for everyone.`; }catch(e){} }
 async function post(url, fd){ spin.hidden=false; card.classList.remove("show");
   try { const h={}; if(myKey()) h["X-TypeSafe-Key"]=myKey(); const r=await fetch(url,{method:"POST",body:fd,headers:h});
+        if(r.status===401){ const j=await r.json(); alert(j.detail+" Check the key under 'Use your own key'."); return null; }
         if(r.status===429){ const j=await r.json(); verdict.className="verdict REVIEW"; verdict.textContent="😴 "+ "Bro is tired"; mom.textContent=j.detail; meta.textContent=""; chips.innerHTML=""; previews.innerHTML=""; card.classList.add("show"); loadBudget(); return null; }
         const j=await r.json(); loadBudget(); return j; }
   catch(e){ mom.textContent="Server not reachable: "+e; card.classList.add("show"); } finally { spin.hidden=true; } }

@@ -15,6 +15,8 @@ import io
 import qrcode
 from typesafe_sdk import TypeSafeClient
 
+from typesafe_sdk._core.errors import TypeSafeError
+
 from app.decide import decide
 from app.modes import RECENT, bro, remember, wife
 
@@ -57,6 +59,13 @@ def _charge(request: Request, shared: bool) -> None:
     _usage["ips"][ip] = _usage["ips"].get(ip, 0) + 1
     _USAGE.parent.mkdir(exist_ok=True)
     _USAGE.write_text(_json.dumps(_usage))
+
+
+@app.exception_handler(TypeSafeError)
+async def _typesafe_error(request: Request, exc: TypeSafeError):
+    msg = str(exc)
+    code = 401 if "401" in msg or "nauthori" in msg else 502
+    return JSONResponse({"detail": "TypeSafe rejected that key." if code == 401 else f"TypeSafe error: {msg[:160]}"}, status_code=code)
 
 
 @app.get("/budget")
