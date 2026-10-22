@@ -155,6 +155,11 @@ async def qr_png():
     return Response(buf.getvalue(), media_type="image/png")
 
 
+@app.get("/local", response_class=HTMLResponse)
+async def local():
+    return (Path(__file__).parent / "local.html").read_text()
+
+
 @app.get("/", response_class=HTMLResponse)
 async def index():
     html = (Path(__file__).parent / "index.html").read_text()

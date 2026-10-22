@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BroCheck Local</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>😎</text></svg>">
+<style>
+  :root { --bg:#0f0f12; --card:#1a1a20; --fg:#f4f4f5; --muted:#9a9aa3; --ok:#34d399; --no:#f87171; --hm:#fbbf24; --accent:#a78bfa; }
+  * { box-sizing:border-box }
+  body { margin:0; background:radial-gradient(1200px 600px at 50% -10%, #1f3d2a 0%, var(--bg) 60%); color:var(--fg); font:17px/1.4 -apple-system, system-ui, sans-serif; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:24px 16px 48px }
+  h1 { font-size:38px; margin:8px 0 4px; background:linear-gradient(90deg,#6ee7b7,#a78bfa); -webkit-background-clip:text; background-clip:text; color:transparent }
+  .sub { color:var(--muted); margin:0 0 18px; text-align:center; max-width:520px }
+  .row { display:flex; gap:12px; flex-wrap:wrap; justify-content:center }
+  .slot { position:relative; width:150px; height:150px; border-radius:16px; overflow:hidden; cursor:pointer; background:#1f1f27; border:2px dashed #3a3a44 }
+  .slot span { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--muted) } .slot img { width:100%; height:100%; object-fit:cover; display:none } .slot img[src] { display:block } .slot img[src] + span { display:none }
+  .btn { background:var(--accent); color:#111; font-weight:700; font-size:19px; padding:14px 26px; border-radius:16px; border:0; cursor:pointer; margin-top:14px } .btn:disabled { opacity:.35 }
+  .card { width:100%; max-width:520px; background:var(--card); border-radius:20px; padding:22px; margin-top:18px; display:none; border:1px solid rgba(255,255,255,.07) } .card.show { display:block }
+  .verdict { font-size:48px; font-weight:800; letter-spacing:-.03em } .verdict.APPROVE{color:var(--ok)} .verdict.NOPE{color:var(--no)} .verdict.REVIEW{color:var(--hm)}
+  .line { font-size:21px; font-style:italic; margin:10px 0 } .meta { color:var(--muted); font-size:14px }
+  .bars { margin-top:14px } .bars div { display:flex; align-items:center; gap:10px; margin:6px 0; font-size:15px } .bars i { height:10px; border-radius:6px; background:linear-gradient(90deg,var(--accent),#6ee7b7); display:block } .bars b { width:150px; text-align:right; color:var(--muted); font-weight:500 }
+  .status { color:var(--muted); margin-top:12px; font-size:15px } .cam { position:fixed; inset:0; background:rgba(0,0,0,.9); display:none; flex-direction:column; align-items:center; justify-content:center; gap:16px; z-index:9 } .cam.on{display:flex} .cam video{width:min(92vw,560px);border-radius:18px;background:#000;transform:scaleX(-1)} .cam video.back{transform:none}
+  footer { margin-top:auto; padding-top:28px; color:var(--muted); font-size:13px; text-align:center } footer a { color:var(--accent) }
+</style>
+<body>
+  <h1>BroCheck Local</h1>
+  <p class="sub">Same idea, no server, no key: CLIP runs in your browser (~150 MB once, then cached). Photos never leave your phone.</p>
+  <div class="row">
+    <div class="slot" onclick="openCam('me','user')"><img id="t-me" alt=""><span>🙂 You</span></div>
+    <div class="slot" onclick="openCam('them','environment')"><img id="t-them" alt=""><span>💘 Them</span></div>
+  </div>
+  <div class="row"><label class="btn" style="background:#26262e;color:#eee">🖼️ File for them<input type="file" accept="image/*" hidden onchange="pick(this,'them')"></label><label class="btn" style="background:#26262e;color:#eee">🖼️ File for you<input type="file" accept="image/*" hidden onchange="pick(this,'me')"></label></div>
+  <button class="btn" id="go" onclick="judge()" disabled>Ask local bro</button>
+  <div class="status" id="status">Model not loaded yet. It downloads on the first check.</div>
+  <div class="card" id="card">
+    <div class="verdict" id="verdict"></div><div class="line" id="line"></div><div class="meta" id="meta"></div>
+    <div class="bars" id="bars"></div>
+  </div>
+  <div class="cam" id="cam"><video id="video" autoplay playsinline muted></video>
+    <div class="row"><button class="btn" onclick="snap()">📸 Snap</button><button class="btn" style="background:#26262e;color:#eee" onclick="flip()">🔄</button><button class="btn" style="background:#26262e;color:#eee" onclick="closeCam()">✕</button></div></div>
+  <footer><a href="/">← cloud version (Jev)</a> · CLIP ViT-B/32 int8 via transformers.js · relationship = zero-shot over a side-by-side composite · same person = cosine of the two photo embeddings · softmax, not calibrated like Jev</footer>
+<script type="module">
+import { AutoTokenizer, AutoProcessor, CLIPTextModelWithProjection, CLIPVisionModelWithProjection, RawImage, env } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.3.3";
+env.allowLocalModels = false;
+const MODEL="Xenova/clip-vit-base-patch32";
+const LABELS = {
+  partner: "a photo of two people who are a couple on a date",
+  best_friend: "a photo of two best friends laughing together",
+  gym_buddy: "a photo of two gym buddies after a workout",
+  coworker: "a photo of two coworkers in an office",
+  stranger: "a photo of two strangers who do not know each other",
+};
+const LINE = { partner:"Local bro says go. Text them.", best_friend:"That's your best friend, not your date.", gym_buddy:"Gym buddies. Leg day, not date night.", coworker:"Keep it at the office party.", stranger:"You'll have to say hi first." };
+const SAME = 0.86; // cosine between the two photo embeddings; same person in two shots lands ~0.85-0.95, two people ~0.6-0.8
+let M=null, textEmb=null, files={}, camTarget=null, facing="user", stream=null;
+const $=id=>document.getElementById(id);
+const dev = navigator.gpu ? "webgpu" : "wasm";
+async function model(){ if(M) return M; const prog=p=>{ if(p.status==="progress") $("status").textContent=`Downloading ${p.file.split("/").pop()} ${Math.round(p.progress||0)}%`; };
+  $("status").textContent="Downloading CLIP (~150 MB, once)…";
+  const [tok, proc, tm, vm] = await Promise.all([AutoTokenizer.from_pretrained(MODEL), AutoProcessor.from_pretrained(MODEL),
+    CLIPTextModelWithProjection.from_pretrained(MODEL,{dtype:"q8",device:dev,progress_callback:prog}), CLIPVisionModelWithProjection.from_pretrained(MODEL,{dtype:"q8",device:dev,progress_callback:prog})]);
+  M={tok,proc,tm,vm}; const t=tok(Object.values(LABELS),{padding:true,truncation:true}); textEmb=norm((await tm(t)).text_embeds);
+  $("status").textContent="Model ready, cached in this browser."; return M; }
+function norm(t){ const a=t.tolist(); return a.map(v=>{ const n=Math.hypot(...v); return v.map(x=>x/n); }); }
+const dot=(a,b)=>a.reduce((s,x,i)=>s+x*b[i],0);
+async function embed(file){ const img=await RawImage.fromBlob(file); const inp=await M.proc(img); return norm((await M.vm(inp)).image_embeds)[0]; }
+async function composite(a,b){ const [ia,ib]=await Promise.all([a,b].map(f=>createImageBitmap(f))); const h=336, wa=Math.round(ia.width*h/ia.height), wb=Math.round(ib.width*h/ib.height);
+  const c=document.createElement("canvas"); c.width=wa+wb+8; c.height=h; const g=c.getContext("2d"); g.fillStyle="#000"; g.fillRect(0,0,c.width,h); g.drawImage(ia,0,0,wa,h); g.drawImage(ib,wa+8,0,wb,h); return new Promise(r=>c.toBlob(r,"image/jpeg",.9)); }
+window.judge = async function(){ $("go").disabled=true; await model(); const t0=performance.now();
+  const [eMe,eThem,eBoth]=await Promise.all([embed(files.me),embed(files.them),composite(files.me,files.them).then(embed)]);
+  const same=dot(eMe,eThem); const keys=Object.keys(LABELS); const logits=textEmb.map(t=>100*dot(eBoth,t)); const mx=Math.max(...logits); const ex=logits.map(l=>Math.exp(l-mx)); const Z=ex.reduce((a,b)=>a+b,0); const probs={}; keys.forEach((k,i)=>probs[k]=ex[i]/Z);
+  const ms=Math.round(performance.now()-t0); const [rel,p]=Object.entries(probs).sort((a,b)=>b[1]-a[1])[0];
+  let dec, line;
+  if(same>SAME){ dec="NOPE"; line="That's you. Go find a bro."; }
+  else if(p<0.35){ dec="REVIEW"; line=`Local bro isn't sure. Reads as ${rel.replace("_"," ")}.`; }
+  else { dec=(rel==="partner"||rel==="best_friend"||rel==="gym_buddy")?"APPROVE":"NOPE"; line=LINE[rel]; }
+  $("verdict").className="verdict "+dec; $("verdict").textContent=({APPROVE:"✅ Go for it",NOPE:"❌ Nah",REVIEW:"🤔 Maybe"})[dec];
+  $("line").textContent="“"+line+"”";
+  $("meta").textContent=`reads as: ${same>SAME?"yourself":rel.replace("_"," ")} · p=${p.toFixed(2)} · same person ${same.toFixed(2)} · ${ms} ms on ${dev==="webgpu"?"WebGPU":"WASM"} · nothing uploaded`;
+  $("bars").innerHTML=[["same person",same],...Object.entries(probs).sort((a,b)=>b[1]-a[1]).map(([k,v])=>[k.replace("_"," "),v])].map(([k,v])=>`<div><b>${k}</b><i style="width:${Math.round(v*220)}px"></i>${v.toFixed(2)}</div>`).join("");
+  $("card").classList.add("show"); $("go").disabled=false; };
+window.pick=function(input,who){ const f=input.files[0]; if(!f) return; files[who]=f; $("t-"+who).src=URL.createObjectURL(f); $("go").disabled=!(files.me&&files.them); };
+window.openCam=async function(t,face){ camTarget=t; facing=face; await startCam(); };
+async function startCam(){ if(stream) stream.getTracks().forEach(x=>x.stop()); try{ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:facing,width:{ideal:1280}},audio:false}); }catch(e){ alert("Camera blocked: "+e.message); return; } $("video").srcObject=stream; $("video").classList.toggle("back",facing!=="user"); $("cam").classList.add("on"); }
+window.flip=function(){ facing=facing==="user"?"environment":"user"; startCam(); };
+window.closeCam=function(){ if(stream) stream.getTracks().forEach(x=>x.stop()); stream=null; $("cam").classList.remove("on"); };
+window.snap=function(){ const v=$("video"), c=document.createElement("canvas"); c.width=v.videoWidth; c.height=v.videoHeight; const g=c.getContext("2d"); if(facing==="user"){ g.translate(c.width,0); g.scale(-1,1); } g.drawImage(v,0,0);
+  c.toBlob(b=>{ const f=new File([b],"snap.jpg",{type:"image/jpeg"}); closeCam(); files[camTarget]=f; $("t-"+camTarget).src=URL.createObjectURL(f); $("go").disabled=!(files.me&&files.them); },"image/jpeg",.9); };
+</script>
+</body>
+</html>
