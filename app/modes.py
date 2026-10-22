@@ -15,10 +15,12 @@ from app.decide import IMAGES_HEADER, shrink
 
 import json
 
-STORE = Path(__file__).resolve().parents[1] / "data" / "recent.json"
-RECENT: deque = deque(maxlen=24)
-if STORE.exists():
-    RECENT.extend(json.loads(STORE.read_text()))
+DATA = Path(__file__).resolve().parents[1] / "data"
+LOG = DATA / "verdicts.jsonl"  # every verdict ever, append-only, thumbs inline: the mini DB
+RECENT: deque = deque(maxlen=60)  # what the gallery shows
+if LOG.exists():
+    rows = [json.loads(line) for line in LOG.read_text().splitlines() if line.strip()]
+    RECENT.extend(reversed(rows[-60:]))
 
 
 def thumb(photo: Path, side: int = 160) -> str:
@@ -30,10 +32,12 @@ def thumb(photo: Path, side: int = 160) -> str:
 
 
 def remember(mode: str, photo: Path, verdict: dict, photo2: Path | None = None) -> None:
-    RECENT.appendleft({"mode": mode, "t": time.strftime("%H:%M:%S"), "thumb": thumb(photo),
-                       "thumb2": thumb(photo2) if photo2 else None, **verdict})
-    STORE.parent.mkdir(exist_ok=True)
-    STORE.write_text(json.dumps(list(RECENT)))
+    row = {"mode": mode, "t": time.strftime("%Y-%m-%d %H:%M:%S"), "thumb": thumb(photo),
+           "thumb2": thumb(photo2) if photo2 else None, **verdict}
+    RECENT.appendleft(row)
+    DATA.mkdir(exist_ok=True)
+    with LOG.open("a") as f:
+        f.write(json.dumps(row) + "\n")
 
 
 BRO_Q = {
