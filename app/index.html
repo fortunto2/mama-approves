@@ -73,6 +73,8 @@
   .slide h2 { font-size:clamp(34px,5vw,58px); margin:0; background:linear-gradient(90deg,#c4b5fd,#f0abfc,#fbbf24); -webkit-background-clip:text; background-clip:text; color:transparent; letter-spacing:-.02em }
   .slide p { font-size:clamp(20px,2.6vw,30px); color:var(--muted); margin:0; line-height:1.45 } .slide p b { color:var(--fg) } .slide a { color:var(--accent) }
   .slide img { margin-top:10px; border-radius:12px; background:#fff; padding:6px }
+  .live { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin:6px 0 }
+  .live .g { width:150px; height:150px; animation:pop .4s } .live .g.pair { width:230px } .live .g span { font-size:14px }
   .nav { display:flex; align-items:center; gap:14px; margin-top:14px } #dots span { display:inline-block; width:8px; height:8px; border-radius:50%; background:#3a3a44; margin:0 3px } #dots span.on { background:var(--accent) }
   .pitch { max-width:720px; text-align:left; background:var(--card); border:1px solid rgba(255,255,255,.07); border-radius:24px; padding:28px 32px; animation:pop .5s }
   .pitch h2 { font-size:40px; margin:0 0 6px; background:linear-gradient(90deg,#c4b5fd,#f0abfc,#fbbf24); -webkit-background-clip:text; background-clip:text; color:transparent }
@@ -111,13 +113,10 @@
   <div class="pane" id="pane-pitch">
     <div class="deck" id="deck">
       <section class="slide on"><div class="big">🍲</div><h2>Mom Approves?</h2><p>Point your phone at food.<br><b>Mom decides in one second.</b></p></section>
-      <section class="slide"><div class="big">⚡</div><h2>One call to Jev</h2><p>TypeSafe's decision model sees the photo.<br>Nine typed questions, one request, <b>~1 second</b>.</p></section>
-      <section class="slide"><div class="big">🎯</div><h2>Probabilities, not text</h2><p>Calibrated answers your code can branch on.<br><b>Nothing to parse. Nothing to hallucinate.</b></p></section>
-      <section class="slide"><div class="big">🎚️</div><h2>Mom is five numbers</h2><p>home-made 0.25 · vegetables 0.25 · no junk 0.20 · warm 0.15 · portion 0.15<br><b>Stricter mom? Change a number, not a prompt.</b></p></section>
-      <section class="slide"><div class="big">🤔</div><h2>Not sure? "Show me closer."</h2><p>Confidence below 0.6, empty plate, no face →<br><b>never a guess.</b></p></section>
-      <section class="slide"><div class="big">😎</div><h2>Same engine, new judge</h2><p>Bro compares two photos.<br><b>Partner, best friend, gym buddy… or "that's you."</b></p></section>
-      <section class="slide"><div class="big">🚫🤖</div><h2>No LLM anywhere</h2><p>~1 s per verdict · $0.04 per million tokens<br><b>Built in 50 minutes.</b></p></section>
-      <section class="slide"><div class="big">🐙</div><h2>Team</h2><p><a href="https://github.com/fortunto2" target="_blank">fortunto2</a> · Rustam · backend<br><a href="https://github.com/caiboyang" target="_blank">caiboyang</a> · Brian · Swift<br><a href="https://github.com/fortunto2/mama-approves" target="_blank">github.com/fortunto2/mama-approves</a></p><img src="/qr.png" width="160" height="160" alt="QR"></section>
+      <section class="slide"><div class="big">⚡</div><h2>One call to Jev</h2><p>TypeSafe's decision model sees the photo. Nine typed questions, one request, ~1 s.<br><b>Calibrated probabilities, not text. Nothing to hallucinate.</b></p></section>
+      <section class="slide"><div class="big">🎚️</div><h2>Mom is five numbers</h2><p>home-made · vegetables · no junk · warm · portion<br><b>Stricter mom? Change a number, not a prompt.</b><br>Not sure → <b>"show me closer"</b>, never a guess.</p></section>
+      <section class="slide"><h2>Live verdicts</h2><div class="live" id="live"></div><p><b>Same engine, new judge:</b> Bro compares two photos. Partner, friend… or "that's you."</p></section>
+      <section class="slide"><div class="big">🐙</div><h2>Team</h2><p><a href="https://github.com/caiboyang" target="_blank">caiboyang</a> · <b>Brian</b> · Swift front<br><a href="https://github.com/fortunto2" target="_blank">fortunto2</a> · <b>Rustam</b> · backend<br><a href="https://github.com/fortunto2/mama-approves" target="_blank">github.com/fortunto2/mama-approves</a></p><p><b>No LLM anywhere. Built in 50 minutes.</b></p><img src="/qr.png" width="150" height="150" alt="QR"></section>
     </div>
     <div class="nav"><button class="btn ghost" onclick="slide(-1)">←</button><span id="dots"></span><button class="btn ghost" onclick="slide(1)">→</button></div>
     <small style="color:var(--muted)">arrow keys · space · click the slide</small>
@@ -185,7 +184,9 @@ async function judgeBro(){ const fd=new FormData(); fd.append("me",files.me); fd
 async function loadRecent(){ try { const r=await fetch("/recent"); const list=await r.json();
   window.RECENT=list; grid.innerHTML=list.length ? list.map((x,i)=>`<div class="g ${x.thumb2?"pair":""}" title="${x.mom}" onclick="reopen(${i})">${x.thumb2?`<img src="${x.thumb2}"><img src="${x.thumb}">`:`<img src="${x.thumb}">`}<span>${ICON[x.decision]} ${x.mode==="mom"?"Mom":"Bro"} · ${x.approve}${x.mode==="bro"?" · "+x.category:""}</span></div>`).join("") : `<div class="empty">Nothing judged yet. Be the first.</div>`; } catch(e){} }
 let cur=0; const slides=()=>document.querySelectorAll(".slide");
-function slide(d){ const n=slides().length; cur=(cur+d+n)%n; slides().forEach((x,i)=>x.classList.toggle("on",i===cur)); dots.innerHTML=[...Array(n)].map((_,i)=>`<span class="${i===cur?"on":""}"></span>`).join(""); }
+function renderLive(){ const list=(window.RECENT||[]); const pairs=list.filter(x=>x.thumb2).slice(0,2), singles=list.filter(x=>!x.thumb2).slice(0,2);
+  live.innerHTML=[...pairs,...singles].map(x=>`<div class="g ${x.thumb2?"pair":""}">${x.thumb2?`<img src="${x.thumb2}"><img src="${x.thumb}">`:`<img src="${x.thumb}">`}<span>${ICON[x.decision]} ${x.mode==="mom"?"Mom":"Bro"} · ${x.approve}${x.mode==="bro"?" · "+x.category:""}</span></div>`).join("") || "<p>No verdicts yet</p>"; }
+function slide(d){ const n=slides().length; cur=(cur+d+n)%n; slides().forEach((x,i)=>x.classList.toggle("on",i===cur)); if(cur===3) renderLive(); dots.innerHTML=[...Array(n)].map((_,i)=>`<span class="${i===cur?"on":""}"></span>`).join(""); }
 document.addEventListener("keydown",e=>{ if(mode!=="pitch") return; if(e.key==="ArrowRight"||e.key===" "){e.preventDefault();slide(1)} if(e.key==="ArrowLeft") slide(-1); });
 deck.addEventListener("click",e=>{ if(e.target.tagName!=="A") slide(1); }); slide(0);
 function reopen(i){ const x=RECENT[i]; if(!x) return; mode = x.mode==="bro" ? "bro" : "mom";
