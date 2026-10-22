@@ -8,10 +8,13 @@ help: ## Targets
 run: ## Verdict on sample photos: make run F="samples/*.jpg"
 	$(ENV) uv run python cli/main.py $(or $(F),samples/*.jpg)
 
-serve: ## HTTP endpoint for the iPhone Shortcut on :8787
-	$(ENV) uv run uvicorn app.server:app --host 0.0.0.0 --port 8787
+serve: ## HTTP endpoint on :8787 (PUBLIC_URL drives the QR)
+	$(ENV) PUBLIC_URL=$(or $(PUBLIC_URL),https://bro.rustman.org) uv run uvicorn app.server:app --host 0.0.0.0 --port 8787
 
-tunnel: ## Public URL via Cloudflare quick tunnel (venue Wi-Fi often blocks phone->laptop)
+tunnel: ## bro.rustman.org via the named Cloudflare tunnel (config ~/.cloudflared/brocheck.yml)
+	cloudflared tunnel --config ~/.cloudflared/brocheck.yml run brocheck
+
+quick-tunnel: ## Throwaway public URL when the named tunnel is not set up
 	cloudflared tunnel --url http://127.0.0.1:8787 --no-autoupdate
 
 ip: ## LAN URL to paste into the Shortcut
