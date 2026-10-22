@@ -59,6 +59,10 @@
   .cam { position:fixed; inset:0; background:rgba(0,0,0,.9); display:none; flex-direction:column; align-items:center; justify-content:center; gap:16px; z-index:9 }
   .cam.on { display:flex } .cam video { width:min(92vw,560px); border-radius:18px; background:#000; transform:scaleX(-1) } .cam video.back { transform:none }
   .cam .row { display:flex; gap:12px }
+  .qrhero { display:flex; align-items:center; gap:24px; background:var(--card); border:1px solid rgba(255,255,255,.07); border-radius:24px; padding:18px 26px; margin-top:18px; animation:pop .5s }
+  .qrhero img { border-radius:14px; background:#fff; padding:8px } .qrhero b { font-size:26px } .qrhero code { color:var(--accent); font-size:15px } .qrhero small { color:var(--muted) }
+  .qrhero.off { display:none }
+  @media (max-width:560px){ .qrhero { flex-direction:column; text-align:center } .qrhero img { width:200px; height:200px } }
 </style>
 <body>
   <div class="hero" id="hero">🍲</div>
@@ -88,6 +92,10 @@
     <button class="btn" id="broGo" onclick="judgeBro()" disabled>Ask bro</button>
   </div>
 
+  <div class="qrhero" id="qrhero">
+    <img src="/qr.png" alt="QR" width="260" height="260">
+    <div><b>Scan to play</b><br><code>{{LAN_URL}}</code><br><small>Mom judges your food. Bro judges your date.</small></div>
+  </div>
   <div class="spin" id="spin" hidden>Asking…</div>
   <div class="card" id="card">
     <div class="previews" id="previews"></div>
@@ -124,7 +132,7 @@ function tab(m){ mode=m; document.querySelectorAll(".tabs button").forEach((b,i)
   document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("on",p.id==="pane-"+m));
   title.textContent = m==="mom" ? "Mom Approves?" : "Bro Approves?"; hero.textContent = m==="mom" ? "🍲" : "😎";
   subtitle.textContent = m==="mom" ? "Point at food. Mom decides in one second." : "Your selfie + their photo. Bro checks the vibe.";
-  card.classList.remove("show"); }
+  card.classList.remove("show"); qrhero.classList.remove("off"); }
 function pick(input,who){ const f=input.files[0]; if(!f) return; files[who]=f; document.getElementById("t-"+who).src=URL.createObjectURL(f); broGo.disabled=!(files.me&&files.them); }
 function show(j, imgs){
   previews.innerHTML = imgs.map(u=>`<img src="${u}">`).join("");
@@ -134,7 +142,7 @@ function show(j, imgs){
   scoreLabel.textContent = mode==="mom" ? "Mom score" : "Match score";
   bar.style.width="0"; setTimeout(()=>bar.style.width = Math.round(j.approve*100)+"%", 50);
   chips.innerHTML = CHIPS[mode].map(k=>`<span class="chip">${k.replace(/_/g," ")} <b>${j.answers[k]}</b></span>`).join("");
-  card.classList.remove("show"); void card.offsetWidth; card.classList.add("show"); loadRecent(); }
+  qrhero.classList.add("off"); card.classList.remove("show"); void card.offsetWidth; card.classList.add("show"); loadRecent(); }
 async function post(url, fd){ spin.hidden=false; card.classList.remove("show");
   try { const r=await fetch(url,{method:"POST",body:fd}); return await r.json(); }
   catch(e){ mom.textContent="Server not reachable: "+e; card.classList.add("show"); } finally { spin.hidden=true; } }
