@@ -1,19 +1,27 @@
-.PHONY: help run serve ip integration lint
+ENV := set -a; [ -f .env ] && . ./.env; set +a;
+
+.PHONY: help run serve ip integration lint snap cams
 
 help: ## Targets
 	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | awk -F'[:#]+' '{printf "  %-12s %s\n", $$1, $$NF}'
 
 run: ## Verdict on sample photos: make run F="samples/*.jpg"
-	uv run python cli/main.py $(or $(F),samples/*.jpg)
+	$(ENV) uv run python cli/main.py $(or $(F),samples/*.jpg)
 
 serve: ## HTTP endpoint for the iPhone Shortcut on :8787
-	uv run uvicorn app.server:app --host 0.0.0.0 --port 8787
+	$(ENV) uv run uvicorn app.server:app --host 0.0.0.0 --port 8787
 
 ip: ## LAN URL to paste into the Shortcut
 	@echo "http://$$(ipconfig getifaddr en0):8787/decide"
 
 integration: ## One sample through the full pipeline, must print a decision
-	uv run python cli/main.py --json samples/*.jpg | head -1 | grep -E '"decision": "(APPROVE|NOPE|REVIEW)"'
+	$(ENV) uv run python cli/main.py --json samples/*.jpg | head -1 | grep -E '"decision": "(APPROVE|NOPE|REVIEW)"'
 
 lint: ## Ruff
 	uvx ruff check app cli
+
+snap: ## Grab a frame from the Mac camera and judge it: make snap [CAM=0]
+	ffmpeg -hide_banner -loglevel error -y -f avfoundation -framerate 30 -i "$(or $(CAM),0)" -frames:v 1 -update 1 samples/snap.jpg && $(ENV) uv run python cli/main.py samples/snap.jpg
+
+cams: ## List cameras (0 = MacBook, 2 = iPhone Continuity)
+	ffmpeg -hide_banner -f avfoundation -list_devices true -i "" 2>&1 | grep -E '^\[AVFoundation.*\] \[[0-9]\]'

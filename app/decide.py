@@ -14,10 +14,15 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from typesafe_sdk import Choice, Image, Noul, Score, TypeSafeClient
+from PIL import Image as PILImage, ImageFile
+
+ImageFile.LOAD_TRUNCATED_IMAGES = True  # phone JPEGs and partial downloads: judge what we have
+import io
 
 MODEL = os.environ.get("JEV_MODEL", "jev-latest")
 IMAGES_HEADER = {"TypeSafe-Danger-Zone-Images": "true"}  # images are "dreamer-ready", opt-in per request
 GATE = 0.6  # below this confidence on the main question we ask a human, not mom
+MAX_SIDE = 768  # every question that mentions `photo` re-sends the image; 9 copies of a full-size JPEG hit the request limit (400)
 
 # Mom's rules, as weights. Change a number, not a prompt.
 RULES = {
@@ -93,13 +98,23 @@ class Verdict:
         return " ".join(lines) or "Ну такое."
 
 
+def shrink(photo: Path, max_side: int = MAX_SIDE) -> bytes:
+    """JPEG bytes with the long side <= max_side. Jev sees the image once per question, so small wins."""
+    im = PILImage.open(photo)
+    im = im.convert("RGB")
+    im.thumbnail((max_side, max_side))
+    buf = io.BytesIO()
+    im.save(buf, "JPEG", quality=82)
+    return buf.getvalue()
+
+
 def decide(photo: Path, client: TypeSafeClient | None = None) -> Verdict:
     t0 = time.perf_counter()
     own = client is None
     client = client or TypeSafeClient(model=MODEL)
     try:
         r = client.system_one(
-            state={"photo": Image(photo)},
+            state={"photo": Image(shrink(photo))},
             questions=QUESTIONS,
             extra_headers=IMAGES_HEADER,
         )
