@@ -37,8 +37,11 @@ async def decide_photo(photo: UploadFile = File(...)):
 def lan_url() -> str:
     """Address other phones on this Wi-Fi can reach. Prefer the Wi-Fi interface (en0): the
     default route here goes through WARP (100.96.x.x), which nobody else can reach."""
+    import os
     import subprocess
 
+    if os.environ.get("PUBLIC_URL"):  # e.g. a Cloudflare quick tunnel when the venue Wi-Fi isolates clients
+        return os.environ["PUBLIC_URL"].rstrip("/") + "/"
     for iface in ("en0", "en1"):
         r = subprocess.run(["ipconfig", "getifaddr", iface], capture_output=True, text=True)
         if r.returncode == 0 and r.stdout.strip():

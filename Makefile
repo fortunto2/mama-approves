@@ -1,6 +1,6 @@
 ENV := set -a; [ -f .env ] && . ./.env; set +a;
 
-.PHONY: help run serve ip integration lint snap cams
+.PHONY: help run serve ip tunnel integration lint snap cams
 
 help: ## Targets
 	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | awk -F'[:#]+' '{printf "  %-12s %s\n", $$1, $$NF}'
@@ -10,6 +10,9 @@ run: ## Verdict on sample photos: make run F="samples/*.jpg"
 
 serve: ## HTTP endpoint for the iPhone Shortcut on :8787
 	$(ENV) uv run uvicorn app.server:app --host 0.0.0.0 --port 8787
+
+tunnel: ## Public URL via Cloudflare quick tunnel (venue Wi-Fi often blocks phone->laptop)
+	cloudflared tunnel --url http://127.0.0.1:8787 --no-autoupdate
 
 ip: ## LAN URL to paste into the Shortcut
 	@echo "http://$$(ipconfig getifaddr en0):8787/decide"
