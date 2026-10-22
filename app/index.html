@@ -2,7 +2,7 @@
 <html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Bro Approves?</title>
+<title>BroCheck</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍲</text></svg>">
 <style>
   :root { --bg:#0f0f12; --card:#1a1a20; --fg:#f4f4f5; --muted:#9a9aa3; --ok:#34d399; --no:#f87171; --hm:#fbbf24; --accent:#a78bfa; }
@@ -86,7 +86,7 @@
 </style>
 <body>
   <div class="hero" id="hero">😎</div>
-  <h1 id="title">Bro Approves?</h1>
+  <h1 id="title">BroCheck</h1>
   <p class="sub" id="subtitle">Your selfie + their photo. Bro checks the vibe.</p>
   <div class="tabs">
     <button onclick="tab('mom')" hidden>🍲 Mom</button>
@@ -115,7 +115,7 @@
 
   <div class="pane" id="pane-pitch">
     <div class="deck" id="deck">
-      <section class="slide on"><div class="big">😎</div><h2>Bro Approves?</h2><p>Your selfie + their photo.<br><b>Bro decides in one second.</b></p></section>
+      <section class="slide on"><div class="big">😎</div><h2>BroCheck</h2><p>Your selfie + their photo.<br><b>Bro checks the vibe in one second.</b></p></section>
       <section class="slide"><div class="big">⚡</div><h2>One call to Jev</h2><p>TypeSafe's decision model sees both photos. Typed questions, one request, ~1 s.<br><b>Calibrated probabilities, not text. Nothing to hallucinate.</b></p></section>
       <section class="slide"><div class="big">🎚️</div><h2>Bro is a few numbers</h2><p>same vibe · friends · dress match · smiles · red flags<br><b>Partner, best friend, gym buddy, coworker… or "that's you."</b><br>Not sure → <b>"get a better pic"</b>, never a guess.</p></section>
       <section class="slide feat"><div class="hero2" id="hero2"></div><div class="live" id="live" hidden></div></section>
@@ -164,7 +164,7 @@ function tab(m){ mode=m; document.querySelectorAll(".tabs button").forEach((b,i)
   document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("on",p.id==="pane-"+m));
   const pitch = m==="pitch"; title.style.display = pitch ? "none" : ""; subtitle.style.display = pitch ? "none" : ""; hero.style.display = pitch ? "none" : "";
   qrhero.style.display = pitch ? "none" : "";
-  if(!pitch){ title.textContent = m==="mom" ? "Mom Approves?" : "Bro Approves?"; hero.textContent = m==="mom" ? "🍲" : "😎";
+  if(!pitch){ title.textContent = m==="mom" ? "Mom Approves?" : "BroCheck"; hero.textContent = m==="mom" ? "🍲" : "😎";
   subtitle.textContent = m==="mom" ? "Point at food. Mom decides in one second." : "Your selfie + their photo. Bro checks the vibe."; }
   card.classList.remove("show"); qrhero.classList.remove("off"); }
 function pick(input,who){ const f=input.files[0]; if(!f) return; files[who]=f; document.getElementById("t-"+who).src=URL.createObjectURL(f); broGo.disabled=!(files.me&&files.them); }

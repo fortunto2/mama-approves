@@ -18,7 +18,7 @@ from typesafe_sdk import TypeSafeClient
 from app.decide import decide
 from app.modes import RECENT, bro, remember, wife
 
-app = FastAPI(title="Mama Approves")
+app = FastAPI(title="BroCheck")
 _client = TypeSafeClient()
 
 
