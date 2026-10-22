@@ -42,6 +42,7 @@ BRO_Q = {
                   "fish": "Holding a fish", "group": "Can't tell which person it is", "filter": "Heavy filters"},
     ),
     "is_person": Noul(instructions="Is there a clearly visible person in `them`?"),
+    "same_person": Noul(instructions="Are `me` and `them` photos of the same person?"),
     "friends": Noul(instructions="Judging only by looks, clothes and energy, would the people in `me` and `them` plausibly become friends?"),
     "relationship": Choice(
         instructions="Based on `me` and `them` side by side, which relationship fits best?",
@@ -75,7 +76,9 @@ def bro(me: Path, them: Path, client: TypeSafeClient) -> dict:
     score = 0.35 * vibe + 0.15 * smile + 0.25 * style + 0.25 * friends
     if flag != "none":
         score *= 0.8
-    if n["is_person"].noul < 0.5 or c["red_flag"].confidence < 0.5:
+    if n["same_person"].noul > 0.7:
+        decision, line, rel = "NOPE", "That's you. Go find a bro.", "yourself"
+    elif n["is_person"].noul < 0.5 or c["red_flag"].confidence < 0.5:
         decision, line = "REVIEW", "Bro can't see them. Get a better pic."
     elif score >= 0.6:
         decision, line = "APPROVE", {"partner": "Bro says go. Text them.", "best_friend": "Bro says: that's your best friend, not your date.",
@@ -89,7 +92,7 @@ def bro(me: Path, them: Path, client: TypeSafeClient) -> dict:
         line += f" (Also: {flag.replace('_', ' ')}. Bro noticed.)"
     return {"decision": decision, "approve": round(score, 2), "mom": line, "ms": ms,
             "confidence": round(c["relationship"].confidence, 2), "category": rel.replace("_", " "), "allergen": flag, "expired": 0,
-            "answers": {"same_vibe": round(vibe, 2), "friends": round(friends, 2), "both_smiling": round(smile, 2),
+            "answers": {"same_person": round(n["same_person"].noul, 2), "same_vibe": round(vibe, 2), "friends": round(friends, 2), "both_smiling": round(smile, 2),
                         "style_match": s["style_match"].score, "dress_match": s["dress_match"].score, "red_flag": flag}}
 
 
