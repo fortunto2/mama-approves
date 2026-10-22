@@ -42,6 +42,21 @@ BRO_Q = {
                   "fish": "Holding a fish", "group": "Can't tell which person it is", "filter": "Heavy filters"},
     ),
     "is_person": Noul(instructions="Is there a clearly visible person in `them`?"),
+    "friends": Noul(instructions="Judging only by looks, clothes and energy, would the people in `me` and `them` plausibly become friends?"),
+    "relationship": Choice(
+        instructions="Based on `me` and `them` side by side, which relationship fits best?",
+        criteria={
+            "partner": "Could be a couple: matching energy, complementary style",
+            "best_friend": "Best friends: same humor, same scene",
+            "gym_buddy": "Gym or sports buddies: athletic, outdoorsy",
+            "coworker": "Coworkers: polite, professional, nothing more",
+            "stranger": "Strangers who'd nod at each other once",
+        },
+    ),
+    "dress_match": Score(
+        instructions="How well do the clothing styles in `me` and `them` go together?",
+        criteria=["clashing", "meh", "fine", "coordinated", "same closet"],
+    ),
 }
 
 
@@ -53,26 +68,29 @@ def bro(me: Path, them: Path, client: TypeSafeClient) -> dict:
     )
     ms = round((time.perf_counter() - t0) * 1000)
     n, s, c = r.nouls, r.scores, r.choices
-    vibe, smile = n["same_vibe"].noul, n["both_smiling"].noul
-    style = s["style_match"].score / 4
+    vibe, smile, friends = n["same_vibe"].noul, n["both_smiling"].noul, n["friends"].noul
+    style = (s["style_match"].score + s["dress_match"].score) / 8
     flag = c["red_flag"].choice
-    score = 0.45 * vibe + 0.25 * smile + 0.30 * style
+    rel = c["relationship"].choice
+    score = 0.35 * vibe + 0.15 * smile + 0.25 * style + 0.25 * friends
     if flag != "none":
         score *= 0.8
     if n["is_person"].noul < 0.5 or c["red_flag"].confidence < 0.5:
         decision, line = "REVIEW", "Bro can't see them. Get a better pic."
     elif score >= 0.6:
-        decision, line = "APPROVE", "Bro says go. Text them."
+        decision, line = "APPROVE", {"partner": "Bro says go. Text them.", "best_friend": "Bro says: that's your best friend, not your date.",
+                                     "gym_buddy": "Bro says: gym buddies. Leg day, not date night.", "coworker": "Bro says: keep it at the office party.",
+                                     "stranger": "Bro says go, but you'll have to say hi first."}[rel]
     elif score >= 0.4:
-        decision, line = "REVIEW", "Bro says maybe. Coffee, not dinner."
+        decision, line = "REVIEW", f"Bro says maybe. Reads as {rel.replace('_', ' ')}. Coffee, not dinner."
     else:
         decision, line = "NOPE", "Bro says nah. Different worlds."
     if flag != "none" and decision != "REVIEW":
         line += f" (Also: {flag.replace('_', ' ')}. Bro noticed.)"
     return {"decision": decision, "approve": round(score, 2), "mom": line, "ms": ms,
-            "confidence": round(c["red_flag"].confidence, 2), "category": "match", "allergen": flag, "expired": 0,
-            "answers": {"same_vibe": round(vibe, 2), "both_smiling": round(smile, 2),
-                        "style_match": s["style_match"].score, "red_flag": flag}}
+            "confidence": round(c["relationship"].confidence, 2), "category": rel.replace("_", " "), "allergen": flag, "expired": 0,
+            "answers": {"same_vibe": round(vibe, 2), "friends": round(friends, 2), "both_smiling": round(smile, 2),
+                        "style_match": s["style_match"].score, "dress_match": s["dress_match"].score, "red_flag": flag}}
 
 
 WIFE_Q = {
