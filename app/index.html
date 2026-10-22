@@ -2,7 +2,7 @@
 <html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mom Approves?</title>
+<title>Bro Approves?</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍲</text></svg>">
 <style>
   :root { --bg:#0f0f12; --card:#1a1a20; --fg:#f4f4f5; --muted:#9a9aa3; --ok:#34d399; --no:#f87171; --hm:#fbbf24; --accent:#a78bfa; }
@@ -85,22 +85,22 @@
   .team { display:flex; flex-wrap:wrap; gap:10px; margin-top:8px } .team a { color:var(--accent); text-decoration:none; background:#26262e; padding:8px 14px; border-radius:999px; font-size:15px }
 </style>
 <body>
-  <div class="hero" id="hero">🍲</div>
-  <h1 id="title">Mom Approves?</h1>
-  <p class="sub" id="subtitle">Point at food. Mom decides in one second.</p>
+  <div class="hero" id="hero">😎</div>
+  <h1 id="title">Bro Approves?</h1>
+  <p class="sub" id="subtitle">Your selfie + their photo. Bro checks the vibe.</p>
   <div class="tabs">
-    <button class="on" onclick="tab('mom')">🍲 Mom</button>
-    <button onclick="tab('bro')">😎 Bro</button>
+    <button onclick="tab('mom')" hidden>🍲 Mom</button>
+    <button class="on" onclick="tab('bro')">😎 Bro</button>
     <button onclick="tab('pitch')">🎤 Pitch</button>
   </div>
 
-  <div class="pane on" id="pane-mom">
+  <div class="pane" id="pane-mom">
     <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
       <button class="btn" onclick="openCam('mom','environment')">📷 Take a photo</button>
       <label class="btn ghost">🖼️ Pick a file<input type="file" accept="image/*" onchange="judgeMom(this)"></label>
     </div>
   </div>
-  <div class="pane" id="pane-bro">
+  <div class="pane on" id="pane-bro">
     <div class="thumbs">
       <div class="slot" onclick="openCam('me','user')"><img id="t-me" alt=""><span>🙂 You</span></div>
       <div class="slot" onclick="openCam('them','environment')"><img id="t-them" alt=""><span>💘 Them</span></div>
@@ -115,9 +115,9 @@
 
   <div class="pane" id="pane-pitch">
     <div class="deck" id="deck">
-      <section class="slide on"><div class="big">🍲</div><h2>Mom Approves?</h2><p>Point your phone at food.<br><b>Mom decides in one second.</b></p></section>
-      <section class="slide"><div class="big">⚡</div><h2>One call to Jev</h2><p>TypeSafe's decision model sees the photo. Nine typed questions, one request, ~1 s.<br><b>Calibrated probabilities, not text. Nothing to hallucinate.</b></p></section>
-      <section class="slide"><div class="big">🎚️</div><h2>Mom is five numbers</h2><p>home-made · vegetables · no junk · warm · portion<br><b>Stricter mom? Change a number, not a prompt.</b><br>Not sure → <b>"show me closer"</b>, never a guess.</p></section>
+      <section class="slide on"><div class="big">😎</div><h2>Bro Approves?</h2><p>Your selfie + their photo.<br><b>Bro decides in one second.</b></p></section>
+      <section class="slide"><div class="big">⚡</div><h2>One call to Jev</h2><p>TypeSafe's decision model sees both photos. Typed questions, one request, ~1 s.<br><b>Calibrated probabilities, not text. Nothing to hallucinate.</b></p></section>
+      <section class="slide"><div class="big">🎚️</div><h2>Bro is a few numbers</h2><p>same vibe · friends · dress match · smiles · red flags<br><b>Partner, best friend, gym buddy, coworker… or "that's you."</b><br>Not sure → <b>"get a better pic"</b>, never a guess.</p></section>
       <section class="slide feat"><div class="hero2" id="hero2"></div><div class="live" id="live" hidden></div></section>
       <section class="slide"><div class="big">🐙</div><h2>Team</h2><p><a href="https://github.com/caiboyang" target="_blank">caiboyang</a> · <b>Brian</b> · Bro<br><a href="https://github.com/fortunto2" target="_blank">fortunto2</a> · <b>Rustam</b> · Bro<br><b>Herb</b> · Bro<br><a href="https://github.com/fortunto2/mama-approves" target="_blank">github.com/fortunto2/mama-approves</a></p><p><b>No LLM anywhere. Built in 50 minutes.</b></p><img src="/qr.png" width="150" height="150" alt="QR"></section>
     </div>
@@ -126,7 +126,7 @@
   </div>
   <div class="qrhero" id="qrhero">
     <img src="/qr.png" alt="QR" width="260" height="260">
-    <div><b>Scan to play</b><br><code>{{LAN_URL}}</code><br><small>Mom judges your food. Bro judges your date.</small></div>
+    <div><b>Scan to play</b><br><code>{{LAN_URL}}</code><br><small>Bro judges your date. Brutally honest, one second.</small></div>
   </div>
   <div class="spin" id="spin" hidden>Asking…</div>
   <div class="card" id="card">
@@ -143,10 +143,10 @@
 
   <section class="help">
     <h2>⚙️ How it works</h2>
-    <p><b>One call to Jev</b> (TypeSafe AI decision model) with the photo and a handful of typed questions.<br>
+    <p><b>One call to Jev</b> (TypeSafe AI decision model) with both photos and a handful of typed questions.<br>
     <b>Calibrated probabilities</b> back in ~1 s, no text, no LLM.<br>
-    <b>Mom's rules are weights in code.</b> Low confidence → “show me closer”, not a guess.</p>
-    <p><a href="/docs" style="color:var(--accent)">API</a>: <code>POST /decide</code> · <code>POST /bro</code> · <code>GET /recent</code></p>
+    <b>Bro's taste is weights in code.</b> Low confidence → “get a better pic”, not a guess.</p>
+    <p><a href="/docs" style="color:var(--accent)">API</a>: <code>POST /bro</code> (me, them) · <code>GET /recent</code></p>
     <div class="share">
       <img src="/qr.png" alt="QR" width="132" height="132">
       <div><b>Try it on your phone</b><br><code>{{LAN_URL}}</code></div>
@@ -159,7 +159,7 @@
 const ICON = {APPROVE:"✅", NOPE:"❌", REVIEW:"🤔"};
 const LABEL = {mom:{APPROVE:"Approved", NOPE:"Nope", REVIEW:"Show me closer"}, bro:{APPROVE:"Go for it", NOPE:"Nah", REVIEW:"Maybe"}};
 const CHIPS = {mom:["home_made","vegetables","warm_meal","junk","expired","portion"], bro:["same_person","friends","same_vibe","dress_match","style_match","both_smiling","red_flag"]};
-let mode="mom", files={};
+let mode="bro", files={};
 function tab(m){ mode=m; document.querySelectorAll(".tabs button").forEach((b,i)=>b.classList.toggle("on",["mom","bro","pitch"][i]===m));
   document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("on",p.id==="pane-"+m));
   const pitch = m==="pitch"; title.style.display = pitch ? "none" : ""; subtitle.style.display = pitch ? "none" : ""; hero.style.display = pitch ? "none" : "";
