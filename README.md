@@ -3,6 +3,8 @@
 Point your phone at food. In ~1 second: **✅ APPROVE / ❌ NOPE / 🤔 REVIEW**, a probability, and what mom
 would say («Где овощи?»). Built in 50 minutes at the OC AI Builders Lightning Hackathon (Irvine, Oct 21 2026).
 
+**Live:** [bro.rustman.org](https://bro.rustman.org) · **Video (2:53):** [youtu.be/_GzPxIwRMgo](https://youtu.be/_GzPxIwRMgo) · **Write-up:** [rustman.org](https://rustman.org/posts/oc-lightning-hackathon-brocheck-2026/)
+
 How it works: one request to [Jev](https://typesafe.ai), TypeSafe's decision model, with the photo as state and
 nine typed questions (home-made? vegetables? junk? portion? expired? allergen? category?). Jev returns
 calibrated probabilities, not text. Mom's rules are weights in code. No LLM anywhere.
