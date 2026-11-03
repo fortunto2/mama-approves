@@ -31,3 +31,8 @@ snap: ## Grab a frame from the Mac camera and judge it: make snap [CAM=0]
 
 cams: ## List cameras (0 = MacBook, 2 = iPhone Continuity)
 	ffmpeg -hide_banner -f avfoundation -list_devices true -i "" 2>&1 | grep -E '^\[AVFoundation.*\] \[[0-9]\]'
+
+site: ## Static browser version (app/local.html) → Pages project brocheck, served at bro.rustman.org via deploy/bro-worker
+	mkdir -p dist-site && python3 -c "import re;s=open('app/local.html').read().replace('<a href=\"/\">← cloud version (Jev)</a>','<a href=\"https://rustman.org/posts/oc-lightning-hackathon-brocheck-2026/\">how it was built</a> · <a href=\"https://youtu.be/_GzPxIwRMgo\">demo video</a> · <a href=\"https://github.com/fortunto2/mama-approves\">code</a>');s=s if 'sda.js' in s else s.replace('</head>','<script defer src=\"https://analytics.superduperai.co/sda.js\" data-source=\"rustman\"></script>\n</head>',1);open('dist-site/index.html','w').write(s)"
+	printf '/local / 301\n/decide / 302\n' > dist-site/_redirects
+	npx wrangler pages deploy dist-site --project-name=brocheck --branch=main

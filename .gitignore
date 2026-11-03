@@ -6,3 +6,4 @@ samples/
 *.local.md
 .DS_Store
 data/
+dist-site/
